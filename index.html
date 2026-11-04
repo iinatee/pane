@@ -371,6 +371,45 @@ input[type="range"].slider:hover::-moz-range-thumb,
 input[type="range"].slider:focus-visible::-moz-range-thumb { opacity: 1; }
 input[type="range"].slider:disabled { cursor: default; }
 .vol { max-width: 120px; }
+.vol:disabled { opacity: .35; }
+
+/* Device picker */
+.device-wrap { position: relative; min-width: 0; }
+.device-btn {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 190px;
+  border: 0; background: transparent; color: var(--muted);
+  padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  transition: background-color .15s, color .15s;
+}
+.device-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.device-btn:hover, .device-btn[aria-expanded="true"] { background: var(--hover); color: var(--fg); }
+.device-btn.remote { color: var(--accent); }
+.device-menu {
+  position: absolute; right: 0; bottom: calc(100% + 14px); z-index: 20;
+  width: 270px; padding: 8px;
+  background: var(--glass-solid); color: var(--fg);
+  border: 1px solid var(--rim); border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px var(--shadow);
+}
+.device-menu-title {
+  padding: 6px 10px 8px; font-size: 11px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--faint);
+}
+.device-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.device-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  border: 0; background: transparent; text-align: left;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+}
+.device-item:hover { background: var(--hover); }
+.device-item:disabled { opacity: .45; cursor: default; background: transparent; }
+.device-item .i { color: var(--muted); }
+.device-item[aria-current="true"], .device-item[aria-current="true"] .i { color: var(--accent); }
+.device-text { min-width: 0; display: grid; }
+.device-text b, .device-text small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.device-text b { font-weight: 600; }
+.device-text small { color: var(--muted); font-size: 12px; }
+.device-note { padding: 8px 10px; color: var(--muted); font-size: 13px; }
 
 /* Toast */
 #toast {
@@ -397,7 +436,9 @@ input[type="range"].slider:disabled { cursor: default; }
   .head-text h2 { font-size: 22px; }
   .play-all { width: 44px; height: 44px; }
   .player { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 14px; }
-  .right { display: none; }
+  .right { justify-content: center; }
+  .right .vol, .right .vol-icon { display: none; }
+  .device-menu { right: 50%; transform: translateX(50%); width: min(270px, 84vw); }
   #toast { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -423,6 +464,9 @@ input[type="range"].slider:disabled { cursor: default; }
   <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="i-signout" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></g></symbol>
   <symbol id="i-note" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></g></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2.5"/><circle cx="12" cy="14" r="3"/><path d="M12 7h.01"/></g></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="10" rx="1.5"/><path d="M2.5 19h19"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/></g></symbol>
   <symbol id="i-bars" viewBox="0 0 24 24"><g fill="currentColor"><rect x="5" y="9" width="3" height="9" rx="1"/><rect x="10.5" y="5" width="3" height="13" rx="1"/><rect x="16" y="11" width="3" height="7" rx="1"/></g></symbol>
 </svg>
 
@@ -516,6 +560,15 @@ input[type="range"].slider:disabled { cursor: default; }
       </div>
     </div>
     <div class="right">
+      <div class="device-wrap">
+        <button class="device-btn" id="device-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="device-menu" title="Choose where Spotify plays">
+          <svg class="i"><use href="#i-speaker"/></svg><span id="device-name">This browser</span>
+        </button>
+        <div class="device-menu" id="device-menu" hidden>
+          <div class="device-menu-title">Play on</div>
+          <ul class="device-list" id="device-list"></ul>
+        </div>
+      </div>
       <svg class="i vol-icon" aria-hidden="true"><use href="#i-volume"/></svg>
       <input class="slider vol" id="volume" type="range" min="0" max="100" value="70" aria-label="Volume">
     </div>
@@ -715,11 +768,15 @@ input[type="range"].slider:disabled { cursor: default; }
     playlists: [],
     player: null,
     deviceId: null,
-    ps: null,
-    psAt: 0,
+    pb: null,          // what's playing, on Pane ('local') or another device ('remote')
+    pbAt: 0,
+    idleMsg: 'Connecting…',
     currentUri: null,
     tick: null,
+    pollTimer: null,
     seeking: false,
+    volHoldUntil: 0,
+    volTimer: null,
     authFailures: 0
   };
 
@@ -1041,11 +1098,37 @@ input[type="range"].slider:disabled { cursor: default; }
   }
 
   // ---------- playback ----------
+  // Pane never moves playback by itself. If another device is playing, every
+  // control acts on that device. Music only comes to this browser when nothing
+  // else is playing, or when "This browser" is picked in the device menu.
+  const isLocal = () => !!(state.pb && state.pb.source === 'local');
+  const isRemote = () => !!(state.pb && state.pb.source === 'remote');
+  const targetQuery = () => (isLocal() && state.deviceId ? { device_id: state.deviceId } : {});
+
   function activate() {
     if (state.player && state.player.activateElement) state.player.activateElement().catch(() => {});
   }
+  function remoteBlocked() {
+    if (isRemote() && state.pb.device.restricted) {
+      toast(`Spotify won't let Pane control ${state.pb.device.name}. Pick another device from the speaker menu.`);
+      return true;
+    }
+    return false;
+  }
   async function startPlayback(body) {
+    if (isRemote()) {
+      if (remoteBlocked()) return;
+      try {
+        await api('/me/player/play', { method: 'PUT', body });
+      } catch (e) {
+        if (e.status !== 404) throw e;
+        toast(`${state.pb.device.name} isn't responding. Open Spotify there, or pick another device from the speaker menu.`);
+      }
+      pollSoon();
+      return;
+    }
     if (!state.deviceId) { toast('The player is still connecting. Try again in a moment.'); return; }
+    activate();
     try {
       await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
     } catch (e) {
@@ -1053,6 +1136,28 @@ input[type="range"].slider:disabled { cursor: default; }
       await api('/me/player', { method: 'PUT', body: { device_ids: [state.deviceId], play: false } });
       await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
     }
+  }
+  async function togglePlayback() {
+    if (isLocal()) { state.player.togglePlay(); return; }
+    if (isRemote()) {
+      if (remoteBlocked()) return;
+      const pb = state.pb;
+      try {
+        await api(pb.playing ? '/me/player/pause' : '/me/player/play', { method: 'PUT' });
+        setPlayback(Object.assign({}, pb, { playing: !pb.playing, position: currentPos() }));
+      } catch (e) {
+        handleError(e);
+      }
+      pollSoon();
+      return;
+    }
+    if (!state.player) { toast('The player is still connecting.'); return; }
+    playCollection().catch(handleError);
+  }
+  async function remoteCommand(path, method, query) {
+    if (remoteBlocked()) return;
+    try { await api(path, { method, query }); } catch (e) { handleError(e); }
+    pollSoon();
   }
   function playFromRow(i) {
     const v = state.view;
@@ -1072,7 +1177,7 @@ input[type="range"].slider:disabled { cursor: default; }
   }
   async function addToQueue(uri) {
     try {
-      await api('/me/player/queue', { method: 'POST', query: { uri, device_id: state.deviceId || undefined } });
+      await api('/me/player/queue', { method: 'POST', query: Object.assign({ uri }, targetQuery()) });
       toast('Added to queue');
     } catch (e) {
       if (e.status === 404) toast('Start playing something first, then add songs to the queue.');
@@ -1095,15 +1200,17 @@ input[type="range"].slider:disabled { cursor: default; }
       player.addListener('ready', ({ device_id }) => {
         state.deviceId = device_id;
         state.authFailures = 0;
-        if (!state.ps) renderIdle('Ready. Pick a song to start.');
+        if (!state.pb) renderIdle('Ready. Pick a song to start.');
+        pollRemote();
       });
       player.addListener('not_ready', () => {
         state.deviceId = null;
-        renderIdle('Player offline. It reconnects when your connection is back.');
+        if (isLocal()) state.pb = null;
+        playerProblem('Player offline. It reconnects when your connection is back.');
       });
       player.addListener('player_state_changed', onPlayerState);
       player.addListener('initialization_error', ({ message }) => {
-        renderIdle("This browser can't play Spotify. Use Chrome, Edge or Firefox with protected content allowed.");
+        playerProblem("This browser can't play Spotify. Use Chrome, Edge or Firefox with protected content allowed.");
         console.error(message);
       });
       player.addListener('authentication_error', ({ message }) => {
@@ -1115,17 +1222,173 @@ input[type="range"].slider:disabled { cursor: default; }
         setTimeout(() => player.connect(), 500);
       });
       player.addListener('account_error', () => {
-        renderIdle('Spotify says this account can’t stream here. Playback needs Spotify Premium.');
+        playerProblem('Spotify says this account can’t stream here. Playback needs Spotify Premium.');
       });
       player.addListener('playback_error', ({ message }) => toast(message || "Spotify couldn't play that track."));
       player.addListener('autoplay_failed', () => toast('Your browser blocked autoplay. Press play to start.'));
-      player.connect().then((ok) => { if (!ok) renderIdle("Couldn't start the player. Reload the page to try again."); });
+      player.connect().then((ok) => { if (!ok) playerProblem("Couldn't start the player. Reload the page to try again."); });
     };
     const s = document.createElement('script');
     s.src = SDK_URL;
     s.async = true;
-    s.onerror = () => renderIdle("Couldn't load Spotify's player. Your network may block sdk.scdn.co.");
+    s.onerror = () => playerProblem("Couldn't load Spotify's player. Your network may block sdk.scdn.co.");
     document.head.appendChild(s);
+  }
+
+  // A problem with this browser's own player. If another device is playing,
+  // keep showing that and mention the problem instead of blanking the bar.
+  function playerProblem(msg) {
+    if (isRemote()) { state.idleMsg = msg; toast(msg); }
+    else renderIdle(msg);
+  }
+
+  // ---------- following other devices ----------
+  function fromSdk(s) {
+    const t = s.track_window.current_track;
+    const d = s.disallows || {};
+    return {
+      source: 'local',
+      uri: t.uri || null,
+      name: t.name || '',
+      artists: (t.artists || []).map((a) => a.name).join(', '),
+      images: (t.album && t.album.images) || [],
+      playing: !s.paused,
+      position: s.position || 0,
+      duration: s.duration || 0,
+      shuffle: !!s.shuffle,
+      repeat: ['off', 'context', 'track'][s.repeat_mode] || 'off',
+      noPrev: !!d.skipping_prev,
+      noNext: !!d.skipping_next,
+      noSeek: !!d.seeking,
+      device: { id: state.deviceId, name: 'This browser', type: 'Computer', volume: null, supportsVolume: true, restricted: false }
+    };
+  }
+  function fromApi(d) {
+    const t = d.item;
+    const dev = d.device || {};
+    return {
+      source: 'remote',
+      uri: t ? t.uri : null,
+      name: t ? (t.name || '') : 'Nothing playing',
+      artists: t ? ((t.artists || []).map((a) => a.name).join(', ') || (t.show && t.show.name) || '') : '',
+      images: t ? ((t.album && t.album.images) || t.images || []) : [],
+      playing: !!d.is_playing,
+      position: d.progress_ms || 0,
+      duration: t ? (t.duration_ms || 0) : 0,
+      shuffle: !!d.shuffle_state,
+      repeat: d.repeat_state || 'off',
+      noPrev: false,
+      noNext: false,
+      noSeek: !t,
+      device: {
+        id: dev.id || null,
+        name: dev.name || 'another device',
+        type: dev.type || '',
+        volume: typeof dev.volume_percent === 'number' ? dev.volume_percent : null,
+        supportsVolume: dev.supports_volume !== false && typeof dev.volume_percent === 'number',
+        restricted: !!dev.is_restricted
+      }
+    };
+  }
+  async function pollRemote() {
+    clearTimeout(state.pollTimer);
+    state.pollTimer = null;
+    if (document.hidden || isLocal()) return;
+    try {
+      const d = await api('/me/player', { query: { additional_types: 'track,episode' } });
+      if (isLocal()) return;
+      if (!d || !d.device) {
+        setPlayback(null);
+      } else if (!(state.deviceId && d.device.id === state.deviceId)) {
+        setPlayback(fromApi(d));
+      }
+    } catch (e) {
+      if (e.auth) { handleError(e); return; }
+      console.warn('Could not read playback:', e.message);
+    }
+    schedulePoll();
+  }
+  function schedulePoll() {
+    clearTimeout(state.pollTimer);
+    state.pollTimer = null;
+    if (document.hidden || isLocal()) return;
+    state.pollTimer = setTimeout(pollRemote, isRemote() && state.pb.playing ? 5000 : 15000);
+  }
+  function pollSoon() {
+    clearTimeout(state.pollTimer);
+    state.pollTimer = setTimeout(pollRemote, 700);
+  }
+
+  // ---------- device menu ----------
+  function deviceIcon(type) {
+    const t = String(type || '').toLowerCase();
+    if (t === 'smartphone' || t === 'tablet') return 'i-phone';
+    if (t === 'computer') return 'i-laptop';
+    return 'i-speaker';
+  }
+  function deviceTypeLabel(type) {
+    const t = String(type || '').toLowerCase();
+    return { smartphone: 'Phone', tablet: 'Tablet', computer: 'Computer', speaker: 'Speaker', tv: 'TV', avr: 'Receiver', stb: 'TV box', audiodongle: 'Speaker', gameconsole: 'Games console', castvideo: 'Cast device', castaudio: 'Cast device', automobile: 'Car' }[t] || 'Device';
+  }
+  function closeDeviceMenu() {
+    $('device-menu').hidden = true;
+    $('device-btn').setAttribute('aria-expanded', 'false');
+  }
+  async function openDeviceMenu() {
+    const list = $('device-list');
+    $('device-menu').hidden = false;
+    $('device-btn').setAttribute('aria-expanded', 'true');
+    list.replaceChildren(el('li', 'device-note', 'Looking for devices…'));
+    let devices = [];
+    try {
+      const d = await api('/me/player/devices');
+      devices = (d && d.devices) || [];
+    } catch (e) {
+      if (e.auth) { handleError(e); return; }
+      list.replaceChildren(el('li', 'device-note', e.message));
+      return;
+    }
+    if ($('device-menu').hidden) return;
+    const items = [];
+    if (state.deviceId) {
+      const mine = devices.find((x) => x.id === state.deviceId);
+      items.push({ id: state.deviceId, name: 'This browser', sub: 'Pane', type: 'computer', active: isLocal() || !!(mine && mine.is_active), restricted: false });
+    }
+    for (const x of devices) {
+      if (x.id && x.id === state.deviceId) continue;
+      items.push({ id: x.id, name: x.name || 'Unnamed device', sub: deviceTypeLabel(x.type) + (x.is_restricted ? ' · can’t be controlled' : ''), type: x.type, active: !!x.is_active, restricted: !!x.is_restricted || !x.id });
+    }
+    list.replaceChildren();
+    if (!items.length) {
+      list.appendChild(el('li', 'device-note', 'No devices found. Open Spotify on a phone, speaker or computer and it will show up here.'));
+      return;
+    }
+    for (const it of items) {
+      const li = el('li');
+      const b = el('button', 'device-item');
+      b.type = 'button';
+      b.disabled = it.restricted;
+      if (it.active) b.setAttribute('aria-current', 'true');
+      const text = el('span', 'device-text');
+      text.append(el('b', null, it.name), el('small', null, it.active ? 'Playing here' : it.sub));
+      b.append(icon(deviceIcon(it.type)), text);
+      b.addEventListener('click', () => transferTo(it));
+      li.appendChild(b);
+      list.appendChild(li);
+    }
+  }
+  async function transferTo(it) {
+    closeDeviceMenu();
+    if (it.active) return;
+    if (it.id === state.deviceId) activate();
+    const play = !!(state.pb && state.pb.playing);
+    try {
+      await api('/me/player', { method: 'PUT', body: { device_ids: [it.id], play } });
+      toast(it.id === state.deviceId ? 'Playing on this browser' : `Playing on ${it.name}`);
+    } catch (e) {
+      handleError(e);
+    }
+    pollSoon();
   }
 
   // ---------- player bar ----------
@@ -1147,11 +1410,34 @@ input[type="range"].slider:disabled { cursor: default; }
     for (const id of ['shuffle', 'prev', 'next', 'repeat']) $(id).disabled = !on;
     $('seek').disabled = !on;
   }
+  function setDeviceLabel(pb) {
+    const btn = $('device-btn');
+    const remote = !!(pb && pb.source === 'remote');
+    $('device-name').textContent = remote ? pb.device.name : 'This browser';
+    btn.classList.toggle('remote', remote);
+    btn.title = remote ? `Playing on ${pb.device.name}. Choose where Spotify plays` : 'Choose where Spotify plays';
+  }
+  function setVolumeSlider(pb) {
+    const vol = $('volume');
+    if (Date.now() < state.volHoldUntil) return;
+    let v;
+    if (pb && pb.source === 'remote') {
+      vol.disabled = !pb.device.supportsVolume || pb.device.restricted;
+      v = pb.device.volume == null ? 0 : pb.device.volume;
+    } else {
+      vol.disabled = false;
+      const saved = store.get('volume');
+      v = typeof saved === 'number' ? saved : 70;
+    }
+    vol.value = v;
+    vol.style.setProperty('--p', v + '%');
+  }
   function renderIdle(msg) {
-    state.ps = null;
+    if (msg) state.idleMsg = msg;
+    state.pb = null;
     state.currentUri = null;
     stopTick();
-    $('now-title').textContent = msg;
+    $('now-title').textContent = state.idleMsg;
     $('now-artist').textContent = '';
     $('now-heart').hidden = true;
     setNowArt('');
@@ -1161,66 +1447,80 @@ input[type="range"].slider:disabled { cursor: default; }
     setControlsEnabled(false);
     $('seek').max = 1; $('seek').value = 0; $('seek').style.setProperty('--p', '0%');
     $('t-now').textContent = '0:00'; $('t-end').textContent = '0:00';
+    setDeviceLabel(null);
+    setVolumeSlider(null);
     markPlayingRows();
   }
-  function onPlayerState(s) {
-    if (!s || !s.track_window || !s.track_window.current_track) {
-      renderIdle('Playing on another device. Pick a song to bring it back here.');
+  function setPlayback(pb) {
+    if (!pb) {
+      renderIdle(state.deviceId ? 'Ready. Pick a song to start.' : null);
       return;
     }
-    state.ps = s;
-    state.psAt = performance.now();
-    const t = s.track_window.current_track;
-    const images = (t.album && t.album.images) || [];
+    state.pb = pb;
+    state.pbAt = performance.now();
 
-    $('now-title').textContent = t.name || '';
-    $('now-artist').textContent = (t.artists || []).map((a) => a.name).join(', ');
+    $('now-title').textContent = pb.name;
+    $('now-artist').textContent = pb.artists;
 
     const heart = $('now-heart');
-    if (t.uri && SAVEABLE.test(t.uri)) {
+    if (pb.uri && SAVEABLE.test(pb.uri)) {
       heart.hidden = false;
-      heart.dataset.heart = t.uri;
-      setHeartButton(heart, state.saved.get(t.uri) === true);
+      heart.dataset.heart = pb.uri;
+      setHeartButton(heart, state.saved.get(pb.uri) === true);
     } else {
       heart.hidden = true;
       delete heart.dataset.heart;
     }
 
-    if (t.uri !== state.currentUri) {
-      state.currentUri = t.uri;
-      setNowArt(pickImg(images, 64));
-      setAmbient(pickImg(images, 640));
+    if (pb.uri !== state.currentUri) {
+      state.currentUri = pb.uri;
+      setNowArt(pickImg(pb.images, 64));
+      setAmbient(pickImg(pb.images, 640));
       markPlayingRows();
-      if (t.uri && SAVEABLE.test(t.uri) && !state.saved.has(t.uri)) checkSaved([{ uri: t.uri, playable: true }], false);
+      if (pb.uri && SAVEABLE.test(pb.uri) && !state.saved.has(pb.uri)) checkSaved([{ uri: pb.uri, playable: true }], false);
     }
 
-    $('play-icon').setAttribute('href', s.paused ? '#i-play' : '#i-pause');
-    $('play').setAttribute('aria-label', s.paused ? 'Play' : 'Pause');
-    setControlsEnabled(true);
-    const d = s.disallows || {};
-    $('prev').disabled = !!d.skipping_prev;
-    $('next').disabled = !!d.skipping_next;
-    $('seek').disabled = !!d.seeking;
+    $('play-icon').setAttribute('href', pb.playing ? '#i-pause' : '#i-play');
+    $('play').setAttribute('aria-label', pb.playing ? 'Pause' : 'Play');
+    const locked = pb.source === 'remote' && pb.device.restricted;
+    setControlsEnabled(!locked);
+    $('prev').disabled = locked || pb.noPrev;
+    $('next').disabled = locked || pb.noNext;
+    $('seek').disabled = locked || pb.noSeek;
 
-    $('shuffle').setAttribute('aria-pressed', s.shuffle ? 'true' : 'false');
-    const mode = ['off', 'context', 'track'][s.repeat_mode] || 'off';
+    $('shuffle').setAttribute('aria-pressed', pb.shuffle ? 'true' : 'false');
+    const mode = ['off', 'context', 'track'].includes(pb.repeat) ? pb.repeat : 'off';
     const rep = $('repeat');
     rep.dataset.mode = mode;
     rep.setAttribute('aria-pressed', mode === 'off' ? 'false' : 'true');
     rep.setAttribute('aria-label', { off: 'Repeat: off', context: 'Repeat: all', track: 'Repeat: this song' }[mode]);
 
-    if (s.paused) stopTick(); else startTick();
+    setDeviceLabel(pb);
+    setVolumeSlider(pb);
+
+    if (pb.playing) startTick(); else stopTick();
     updateProgress();
   }
+  function onPlayerState(s) {
+    if (!s || !s.track_window || !s.track_window.current_track) {
+      // Playback has left this browser (or never started here). Find out where it is.
+      if (isLocal()) renderIdle(state.deviceId ? 'Ready. Pick a song to start.' : null);
+      pollSoon();
+      return;
+    }
+    clearTimeout(state.pollTimer);
+    state.pollTimer = null;
+    setPlayback(fromSdk(s));
+  }
   function currentPos() {
-    const s = state.ps;
-    if (!s) return 0;
-    if (s.paused) return s.position;
-    return Math.min(s.duration, s.position + (performance.now() - state.psAt));
+    const pb = state.pb;
+    if (!pb) return 0;
+    if (!pb.playing) return pb.position;
+    return Math.min(pb.duration, pb.position + (performance.now() - state.pbAt));
   }
   function updateProgress() {
     if (state.seeking) return;
-    const s = state.ps;
+    const s = state.pb;
     const d = s ? s.duration : 0;
     const p = currentPos();
     const seek = $('seek');
@@ -1276,21 +1576,38 @@ input[type="range"].slider:disabled { cursor: default; }
     $('play-all').addEventListener('click', () => { activate(); playCollection().catch(handleError); });
 
     $('play').addEventListener('click', () => {
-      activate();
-      if (!state.player) { toast('The player is still connecting.'); return; }
-      if (!state.ps) { playCollection().catch(handleError); return; }
-      state.player.togglePlay();
+      if (!isRemote()) activate();
+      togglePlayback();
     });
-    $('prev').addEventListener('click', () => state.player && state.player.previousTrack());
-    $('next').addEventListener('click', () => state.player && state.player.nextTrack());
+    $('prev').addEventListener('click', () => {
+      if (isLocal()) state.player.previousTrack();
+      else if (isRemote()) remoteCommand('/me/player/previous', 'POST');
+    });
+    $('next').addEventListener('click', () => {
+      if (isLocal()) state.player.nextTrack();
+      else if (isRemote()) remoteCommand('/me/player/next', 'POST');
+    });
     $('shuffle').addEventListener('click', () => {
-      if (!state.ps) return;
-      api('/me/player/shuffle', { method: 'PUT', query: { state: String(!state.ps.shuffle), device_id: state.deviceId } }).catch(handleError);
+      if (!state.pb) return;
+      const on = !state.pb.shuffle;
+      if (isRemote()) { setPlayback(Object.assign({}, state.pb, { shuffle: on, position: currentPos() })); remoteCommand('/me/player/shuffle', 'PUT', { state: String(on) }); }
+      else api('/me/player/shuffle', { method: 'PUT', query: Object.assign({ state: String(on) }, targetQuery()) }).catch(handleError);
     });
     $('repeat').addEventListener('click', () => {
-      if (!state.ps) return;
-      const nextMode = ['context', 'track', 'off'][state.ps.repeat_mode] || 'off';
-      api('/me/player/repeat', { method: 'PUT', query: { state: nextMode, device_id: state.deviceId } }).catch(handleError);
+      if (!state.pb) return;
+      const nextMode = { off: 'context', context: 'track', track: 'off' }[state.pb.repeat] || 'off';
+      if (isRemote()) { setPlayback(Object.assign({}, state.pb, { repeat: nextMode, position: currentPos() })); remoteCommand('/me/player/repeat', 'PUT', { state: nextMode }); }
+      else api('/me/player/repeat', { method: 'PUT', query: Object.assign({ state: nextMode }, targetQuery()) }).catch(handleError);
+    });
+    $('device-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if ($('device-menu').hidden) openDeviceMenu(); else closeDeviceMenu();
+    });
+    document.addEventListener('click', (e) => {
+      if (!$('device-menu').hidden && !e.target.closest('.device-wrap')) closeDeviceMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !$('device-menu').hidden) { closeDeviceMenu(); $('device-btn').focus(); }
     });
     $('now-heart').addEventListener('click', () => toggleSave($('now-heart').dataset.heart));
 
@@ -1302,10 +1619,11 @@ input[type="range"].slider:disabled { cursor: default; }
       $('t-now').textContent = fmtTime(+seek.value);
     });
     seek.addEventListener('change', () => {
-      const pos = +seek.value;
+      const pos = Math.round(+seek.value);
       state.seeking = false;
-      if (state.player) state.player.seek(pos);
-      if (state.ps) { state.ps = Object.assign({}, state.ps, { position: pos }); state.psAt = performance.now(); }
+      if (isLocal()) state.player.seek(pos);
+      else if (isRemote()) remoteCommand('/me/player/seek', 'PUT', { position_ms: pos });
+      if (state.pb) { state.pb = Object.assign({}, state.pb, { position: pos }); state.pbAt = performance.now(); }
       updateProgress();
     });
 
@@ -1315,6 +1633,18 @@ input[type="range"].slider:disabled { cursor: default; }
     vol.style.setProperty('--p', vol.value + '%');
     vol.addEventListener('input', () => {
       vol.style.setProperty('--p', vol.value + '%');
+      if (isRemote()) {
+        // Another device: send the level once the slider settles, and don't let a poll jump it back meanwhile.
+        state.volHoldUntil = Date.now() + 2500;
+        clearTimeout(state.volTimer);
+        const level = Math.round(+vol.value);
+        state.volTimer = setTimeout(() => {
+          if (!isRemote()) return;
+          state.pb.device.volume = level;
+          remoteCommand('/me/player/volume', 'PUT', { volume_percent: level });
+        }, 300);
+        return;
+      }
       store.set('volume', +vol.value);
       if (state.player) state.player.setVolume(vol.value / 100);
     });
@@ -1337,14 +1667,20 @@ input[type="range"].slider:disabled { cursor: default; }
       if (e.code !== 'Space' || e.repeat) return;
       const tag = (e.target.tagName || '').toLowerCase();
       if (['input', 'textarea', 'button', 'select', 'a'].includes(tag) || e.target.isContentEditable) return;
-      if (!state.player || !state.ps) return;
+      if (!state.pb) return;
       e.preventDefault();
-      state.player.togglePlay();
+      togglePlayback();
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stopTick();
-      else if (state.ps && !state.ps.paused) { startTick(); updateProgress(); }
+      if (document.hidden) {
+        stopTick();
+        clearTimeout(state.pollTimer);
+        state.pollTimer = null;
+        return;
+      }
+      if (state.pb && state.pb.playing) { startTick(); updateProgress(); }
+      if (!isLocal()) pollRemote();
     });
 
     $('copy-uri').addEventListener('click', async () => {
@@ -1392,6 +1728,7 @@ input[type="range"].slider:disabled { cursor: default; }
     $('app').hidden = false;
     renderIdle('Connecting…');
     loadSdk();
+    pollRemote();
     api('/me')
       .then((me) => { state.me = me; $('who').textContent = me && me.display_name ? me.display_name : ''; })
       .catch(handleError);
