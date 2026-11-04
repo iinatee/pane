@@ -139,10 +139,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .icon-btn:hover { background: var(--hover); color: var(--fg); }
 .icon-btn:disabled { opacity: .35; cursor: default; background: transparent; }
 .icon-btn[aria-pressed="true"] { color: var(--accent); }
-.heart .on { display: none; }
 .heart[aria-pressed="true"] { color: var(--love); }
-.heart[aria-pressed="true"] .on { display: block; }
-.heart[aria-pressed="true"] .off { display: none; }
 
 .primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -192,13 +189,16 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   position: relative; z-index: 1;
   height: 100vh; height: 100dvh;
   display: grid;
-  grid-template-columns: clamp(220px, 22vw, 290px) minmax(0, 1fr);
+  --side: clamp(220px, 20vw, 290px);
+  grid-template-columns: var(--side) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 14px;
   padding-block: max(14px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-bottom, 0px));
   padding-left: max(14px, env(safe-area-inset-left, 0px));
   padding-right: max(14px, env(safe-area-inset-right, 0px));
 }
+
+#app.with-queue { grid-template-columns: var(--side) minmax(0, 1fr) var(--side); }
 
 /* Sidebar */
 .sidebar { display: flex; flex-direction: column; min-height: 0; padding: 18px 12px 12px; gap: 14px; }
@@ -235,6 +235,15 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .side-foot { display: flex; align-items: center; gap: 4px; padding: 10px 4px 0; border-top: 1px solid var(--rim); }
 .side-foot .who { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
 
+/* Queue panel (right), built like the library sidebar */
+.queue-panel { display: flex; flex-direction: column; min-height: 0; padding: 18px 12px 12px; gap: 10px; }
+.qp-head { display: grid; gap: 3px; padding: 0 8px; }
+.qp-head .brand { margin: 0; padding: 0; }
+.qp-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 1.45em; }
+.qp-list .section-label { margin-top: 8px; }
+.q-row.is-current .pl-name { color: var(--accent); }
+.qp-note { padding: 10px; font-size: 12px; color: var(--faint); }
+
 /* Main */
 .main { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 22px 14px 8px; }
 .view-head { display: flex; align-items: center; gap: 16px; padding: 0 10px 14px; }
@@ -264,6 +273,13 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   border: 1px solid var(--rim); background: var(--glass-hi);
 }
 
+.list-tools { display: flex; align-items: center; gap: 8px; margin: 0 10px 12px; }
+.list-tools .search-wrap { flex: 1; min-width: 0; margin: 0; }
+.sort-select {
+  flex: none; max-width: 46%;
+  border: 1px solid var(--rim); background-color: var(--glass-hi); color: var(--fg);
+  border-radius: 999px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
 .filter-input { padding-right: 120px; }
 .filter-input::-webkit-search-cancel-button { margin-right: 4px; }
 .filter-count { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; pointer-events: none; }
@@ -285,7 +301,10 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   display: grid; place-items: center; color: var(--faint);
 }
 .row-art img { width: 100%; height: 100%; object-fit: cover; }
-.row-art .playing-mark { position: absolute; inset: 0; display: none; place-items: center; background: rgba(0, 0, 0, .42); color: #fff; }
+.row.is-playing .row-art::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(0, 0, 0, .42) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Crect x='5' y='9' width='3' height='9' rx='1'/%3E%3Crect x='10.5' y='5' width='3' height='13' rx='1'/%3E%3Crect x='16' y='11' width='3' height='7' rx='1'/%3E%3C/svg%3E") center / 20px no-repeat;
+}
 .row-text { min-width: 0; display: grid; }
 .row-title, .row-artist, .row-album { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-title { font-weight: 600; }
@@ -295,7 +314,6 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .row:hover .queue-btn, .row:focus-within .queue-btn { opacity: 1; }
 @media (hover: none) { .row .queue-btn { opacity: 1; } }
 .row.is-playing .row-title { color: var(--accent); }
-.row.is-playing .playing-mark { display: grid; }
 .row.unplayable { opacity: .45; }
 .row.unplayable .row-play { cursor: default; }
 .list-label { padding: 14px 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
@@ -494,12 +512,18 @@ input[type="range"].slider:disabled { cursor: default; }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* Narrow */
+@media (max-width: 1180px) {
+  #app.with-queue { grid-template-columns: var(--side) minmax(0, 1fr); }
+  .queue-panel { display: none !important; }
+}
 @media (max-width: 1000px) {
   .row { grid-template-columns: minmax(0, 1fr) auto auto 3.2rem; }
   .row-album { display: none; }
 }
 @media (max-width: 760px) {
-  #app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; }
+  #app, #app.with-queue { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; }
+  .filter-input { padding-right: 16px; }
+  .filter-count { display: none; }
   .sidebar { max-height: 32vh; padding: 12px 8px 8px; gap: 8px; }
   .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .nav-btn { justify-content: center; padding: 8px 4px; font-size: 13px; white-space: nowrap; }
@@ -550,7 +574,6 @@ input[type="range"].slider:disabled { cursor: default; }
   <symbol id="i-speaker" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2.5"/><circle cx="12" cy="14" r="3"/><path d="M12 7h.01"/></g></symbol>
   <symbol id="i-laptop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="10" rx="1.5"/><path d="M2.5 19h19"/></g></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/></g></symbol>
-  <symbol id="i-bars" viewBox="0 0 24 24"><g fill="currentColor"><rect x="5" y="9" width="3" height="9" rx="1"/><rect x="10.5" y="5" width="3" height="13" rx="1"/><rect x="16" y="11" width="3" height="7" rx="1"/></g></symbol>
 </svg>
 
 <div class="amb" id="amb-a" aria-hidden="true"></div>
@@ -612,10 +635,21 @@ input[type="range"].slider:disabled { cursor: default; }
       <svg class="i"><use href="#i-search"/></svg>
       <input class="search-input" id="search" type="search" placeholder="Songs or artists" aria-label="Search songs or artists" autocomplete="off">
     </div>
-    <div class="search-wrap" id="filter-wrap" hidden>
-      <svg class="i"><use href="#i-search"/></svg>
-      <input class="search-input filter-input" id="filter" type="search" placeholder="Find a song or artist" aria-label="Find a song or artist in this list" autocomplete="off">
-      <span class="filter-count" id="filter-count" aria-live="polite"></span>
+    <div class="list-tools" id="filter-wrap" hidden>
+      <div class="search-wrap">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input class="search-input filter-input" id="filter" type="search" placeholder="Find a song or artist" aria-label="Find a song or artist in this list" autocomplete="off">
+        <span class="filter-count" id="filter-count" aria-live="polite"></span>
+      </div>
+      <select class="sort-select" id="sort" aria-label="Sort songs">
+        <option value="custom">Custom order</option>
+        <option value="added-desc">Recently added</option>
+        <option value="added-asc">Oldest added</option>
+        <option value="title">Title</option>
+        <option value="artist">Artist</option>
+        <option value="album">Album</option>
+        <option value="duration">Duration</option>
+      </select>
     </div>
     <div class="scroller" id="scroller">
       <div class="home" id="home" hidden>
@@ -693,6 +727,14 @@ input[type="range"].slider:disabled { cursor: default; }
     </div>
   </section>
 
+  <aside class="queue-panel glass" id="queue-panel" aria-labelledby="qp-title" hidden>
+    <div class="qp-head">
+      <h2 class="brand" id="qp-title">Queue</h2>
+      <span class="qp-sub" id="qp-sub"></span>
+    </div>
+    <ul class="playlists qp-list" id="qp-list"></ul>
+  </aside>
+
   <footer class="player glass" aria-label="Player">
     <div class="now">
       <div class="now-art" id="now-art"><svg class="i"><use href="#i-note"/></svg></div>
@@ -701,7 +743,7 @@ input[type="range"].slider:disabled { cursor: default; }
         <span class="now-artist" id="now-artist"></span>
       </div>
       <button class="icon-btn heart" id="now-heart" type="button" aria-pressed="false" aria-label="Save to Liked Songs" hidden>
-        <svg class="i off"><use href="#i-heart"/></svg><svg class="i on"><use href="#i-heart-fill"/></svg>
+        <svg class="i"><use href="#i-heart"/></svg>
       </button>
     </div>
     <div class="center">
@@ -756,7 +798,6 @@ input[type="range"].slider:disabled { cursor: default; }
   ].join(' ');
   const DAY = 864e5;
   const TOP_CACHE_MS = 6 * 3600e3;
-  const LIST_CACHE_MS = 10 * 60e3;
   const HISTORY_CAP = 5000;
 
   // ---------- small helpers ----------
@@ -991,10 +1032,10 @@ input[type="range"].slider:disabled { cursor: default; }
     lyricsUserAt: 0
   };
   const lyricsCache = new Map();
-  const listCache = new Map(); // whole Liked Songs / playlist lists, kept for 10 minutes
+  const listCache = new Map(); // whole Liked Songs / playlist lists already opened this session
 
-  function normTrack(t) {
-    if (!t) return { uri: null, name: 'Unavailable', artists: '', key: ' unavailable', album: '', art: '', duration: 0, playable: false };
+  function normTrack(t, addedAt) {
+    if (!t) return { uri: null, name: 'Unavailable', artists: '', key: ' unavailable', album: '', art: '', duration: 0, added: 0, playable: false };
     const images = (t.album && t.album.images) || t.images || [];
     const artists = (t.artists || []).map((a) => a.name).filter(Boolean).join(', ') || (t.show && t.show.name) || '';
     const name = t.name || 'Untitled';
@@ -1006,6 +1047,7 @@ input[type="range"].slider:disabled { cursor: default; }
       album: (t.album && t.album.name) || (t.show && t.show.name) || '',
       art: pickImg(images, 64),
       duration: t.duration_ms || 0,
+      added: (addedAt && Date.parse(addedAt)) || 0,
       playable: !!t.uri && !t.uri.startsWith('spotify:local') && t.is_playable !== false
     };
   }
@@ -1038,7 +1080,7 @@ input[type="range"].slider:disabled { cursor: default; }
       if (v.type === 'playlist' && b.dataset.id === v.id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     }
     $('lyrics-btn').setAttribute('aria-pressed', v.type === 'lyrics' ? 'true' : 'false');
-    $('queue-btn').setAttribute('aria-pressed', v.type === 'queue' ? 'true' : 'false');
+    markQueueBtn();
   }
   function greeting() {
     const h = new Date().getHours();
@@ -1060,7 +1102,7 @@ input[type="range"].slider:disabled { cursor: default; }
     d = d || {};
     switch (v.type) {
       case 'liked':
-        return { items: (d.items || []).map((i) => normTrack(i.track || i.item)), next: d.next || null, total: d.total };
+        return { items: (d.items || []).map((i) => normTrack(i.track || i.item, i.added_at)), next: d.next || null, total: d.total };
       case 'recent':
         return { items: (d.items || []).map((i) => normTrack(i.track || i.item)), next: null, total: null };
       case 'search': {
@@ -1070,7 +1112,7 @@ input[type="range"].slider:disabled { cursor: default; }
       case 'playlist':
         return {
           items: (d.items || []).map((i) => {
-            const n = normTrack(i.item || i.track);
+            const n = normTrack(i.item || i.track, i.added_at);
             if (i.is_local) n.playable = false;
             return n;
           }),
@@ -1087,8 +1129,13 @@ input[type="range"].slider:disabled { cursor: default; }
     state.viewToken++;
     state.view = view;
     state.tracks = [];
+    state.order = [];
+    state.rendered = 0;
     state.next = null;
     state.loading = false;
+    state.complete = false;
+    state.fullPromise = null;
+    state.sort = 'custom';
     stopLyricsSync();
     $('list').replaceChildren();
     $('scroller').scrollTop = 0;
@@ -1125,8 +1172,10 @@ input[type="range"].slider:disabled { cursor: default; }
     if (t === 'queue') {
       setHeadTile('', VIEW_ICON.queue);
       $('view-title').textContent = 'Queue';
-      $('view-sub').textContent = '';
-      loadQueue(state.viewToken);
+      $('view-sub').textContent = whereText();
+      if (state.queue !== undefined) renderQueueView();
+      else $('loading').hidden = false;
+      refreshQueue();
       return;
     }
 
@@ -1142,24 +1191,10 @@ input[type="range"].slider:disabled { cursor: default; }
       if (opts.focus) { $('search').value = view.q || ''; $('search').focus(); }
       if (!view.q) { setEmpty('Search for a song or an artist.'); return; }
     }
-    const cached = listCache.get(cacheKey(view));
-    if (cached && Date.now() - cached.at < LIST_CACHE_MS) {
-      // Already have the whole list from earlier: show it straight away.
-      state.tracks = cached.tracks.slice();
-      state.total = cached.total;
-      setListSub(cached.total);
-      renderList();
-      return;
-    }
+    if (t === 'liked' || t === 'playlist') { openList(view, state.viewToken); return; }
     loadPage(state.viewToken, firstRequest(view));
   }
-  function setListSub(total) {
-    if (total == null) return;
-    if (state.view.type === 'liked') $('view-sub').textContent = fmtCount(total, 'song');
-    if (state.view.type === 'playlist') $('view-sub').textContent = [state.view.owner, fmtCount(total, 'song')].filter(Boolean).join(' · ');
-  }
-  const cacheKey = (v) => (v.type === 'playlist' ? 'pl:' + v.id : v.type);
-
+  // Recent and Search: one page at a time.
   async function loadPage(token, req) {
     if (!req) return;
     state.loading = true;
@@ -1170,26 +1205,15 @@ input[type="range"].slider:disabled { cursor: default; }
       const page = parsePage(state.view, d);
       const start = state.tracks.length;
       state.tracks.push(...page.items);
+      state.order.push(...seq(start, state.tracks.length));
       state.next = page.next;
-      if (page.total != null) state.total = page.total;
-      if (!state.filter) appendRows(seq(start, state.tracks.length));
-      if (start === 0) setListSub(page.total);
+      renderMore();
       if (!state.tracks.length) setEmpty(VIEW_TEXT[state.view.type].empty);
-      if (!state.next && (state.view.type === 'liked' || state.view.type === 'playlist')) {
-        listCache.set(cacheKey(state.view), { at: Date.now(), tracks: state.tracks.slice(), total: state.total });
-      }
-      checkSaved(page.items, state.view.type === 'liked');
     } catch (e) {
       if (token !== state.viewToken) return;
       if (e.auth) return handleError(e);
-      if (state.view.type === 'playlist' && e.status === 403 && state.tracks.length === 0) {
-        $('filter-wrap').hidden = true;
-        setEmpty('Spotify only lets Pane list the songs in playlists you own or collaborate on. Press play to listen to this one.');
-      } else if (state.tracks.length === 0) {
-        setEmpty(e.message);
-      } else {
-        toast(e.message);
-      }
+      if (state.tracks.length === 0) setEmpty(e.message);
+      else toast(e.message);
     } finally {
       if (token === state.viewToken) {
         state.loading = false;
@@ -1199,101 +1223,256 @@ input[type="range"].slider:disabled { cursor: default; }
     }
   }
   function maybeLoadMore() {
-    if (!state.next || state.loading || state.loadingAll || state.filter) return;
     const s = $('scroller');
-    if (s.scrollTop + s.clientHeight >= s.scrollHeight - 700) loadPage(state.viewToken, state.next);
+    if (s.scrollTop + s.clientHeight < s.scrollHeight - 800) return;
+    if (state.rendered < state.order.length) { renderMore(); requestAnimationFrame(maybeLoadMore); return; }
+    if (state.next && !state.loading) loadPage(state.viewToken, state.next);
   }
 
-  // ---------- finding songs inside a list ----------
+  // ---------- lists: Liked Songs and playlists ----------
+  // Whole lists are kept in this browser, so they open instantly next time. A playlist is
+  // only downloaded again when Spotify says it changed, and songs added to the end of a
+  // playlist (or liked since last time) are fetched on their own. Rows are drawn 100 at a
+  // time as you scroll.
+  const RENDER_CHUNK = 100;
   const seq = (a, b) => Array.from({ length: Math.max(0, b - a) }, (_, k) => a + k);
+  const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
+  const SORTS = {
+    custom: null,
+    'added-desc': (a, b) => b.added - a.added,
+    'added-asc': (a, b) => a.added - b.added,
+    title: (a, b) => collator.compare(a.name, b.name),
+    artist: (a, b) => collator.compare(a.artists, b.artists) || collator.compare(a.album, b.album),
+    album: (a, b) => collator.compare(a.album, b.album),
+    duration: (a, b) => a.duration - b.duration
+  };
+  const cacheKey = (v) => (v.type === 'playlist' ? 'pl:' + v.id : v.type);
+  function sortFor(v) {
+    const chosen = (store.get('sorts') || {})[cacheKey(v)] || store.get('sortDefault') || 'custom';
+    const s = Object.prototype.hasOwnProperty.call(SORTS, chosen) ? chosen : 'custom';
+    // Liked Songs has no custom order of its own: it's newest first.
+    return v.type === 'liked' && s === 'custom' ? 'added-desc' : s;
+  }
+  // Liked Songs already arrives newest first, so that order needs no sorting.
+  const isNaturalOrder = () => state.sort === 'custom' || (state.view.type === 'liked' && state.sort === 'added-desc');
+  const needsWholeList = () => !!state.filter || !isNaturalOrder();
   function visibleIndices() {
-    if (!state.filter) return seq(0, state.tracks.length);
-    const words = state.filter.split(' ').filter(Boolean).map((w) => ' ' + w);
-    const out = [];
-    for (let i = 0; i < state.tracks.length; i++) {
-      const key = state.tracks[i].key;
-      if (words.every((w) => key.includes(w))) out.push(i);
+    let idx = seq(0, state.tracks.length);
+    if (state.filter) {
+      const words = state.filter.split(' ').filter(Boolean).map((w) => ' ' + w);
+      idx = idx.filter((i) => { const key = state.tracks[i].key; return words.every((w) => key.includes(w)); });
     }
-    return out;
+    if (!isNaturalOrder()) {
+      const cmp = SORTS[state.sort], tr = state.tracks;
+      idx.sort((i, j) => cmp(tr[i], tr[j]) || i - j);
+    }
+    return idx;
   }
   function renderList() {
+    state.order = visibleIndices();
+    state.rendered = 0;
     $('list').replaceChildren();
-    const idx = visibleIndices();
-    appendRows(idx);
+    renderMore();
     if (state.filter) {
-      $('filter-count').textContent = `${fmtNum(idx.length)} of ${fmtNum(state.tracks.length)}`;
-      setEmpty(idx.length ? '' : `Nothing here matches “${$('filter').value.trim()}”.`);
+      $('filter-count').textContent = `${fmtNum(state.order.length)} of ${fmtNum(state.tracks.length)}`;
+      setEmpty(state.order.length ? '' : `Nothing here matches “${$('filter').value.trim()}”.`);
     } else {
       $('filter-count').textContent = '';
-      setEmpty(state.tracks.length ? '' : VIEW_TEXT[state.view.type].empty);
+      setEmpty(state.tracks.length || !state.complete ? '' : VIEW_TEXT[state.view.type].empty);
     }
+    requestAnimationFrame(maybeLoadMore);
   }
-  // Fetch the rest of the list (four pages at a time) so a search covers every song, not just the ones scrolled to.
-  function loadAll(token) {
-    if (!state.next) return Promise.resolve();
-    if (state.loadingAll) return state.loadingAll;
-    const v = state.view;
-    const showProgress = (have) => {
-      $('loading').hidden = false;
-      $('loading').textContent = state.total ? `Loading the full list to search… ${fmtNum(have)} of ${fmtNum(state.total)}` : 'Loading the full list to search…';
-    };
-    state.loadingAll = (async () => {
-      while (state.loading) await new Promise((r) => setTimeout(r, 50));
-      if (token !== state.viewToken || !state.next) return;
-      const start = state.tracks.length;
-      showProgress(start);
-      if (state.total == null) {
-        while (state.next && token === state.viewToken) {
-          const page = parsePage(v, await api(state.next));
-          state.tracks.push(...page.items);
-          state.next = page.next;
-          showProgress(state.tracks.length);
-        }
-      } else {
-        const [path, query] = firstRequest(v);
-        const offsets = [];
-        for (let o = start; o < state.total; o += 50) offsets.push(o);
-        const pages = new Array(offsets.length);
-        let k = 0, have = start;
-        const worker = async () => {
-          while (k < offsets.length && token === state.viewToken) {
-            const n = k++;
-            const page = parsePage(v, await api(path, { query: Object.assign({}, query, { offset: offsets[n] }) }));
-            pages[n] = page.items;
-            have += page.items.length;
-            showProgress(have);
-          }
-        };
-        await Promise.all([worker(), worker(), worker(), worker()]);
-        if (token !== state.viewToken) return;
-        for (const p of pages) if (p) state.tracks.push(...p);
-        state.next = null;
-      }
-      if (token !== state.viewToken) return;
-      listCache.set(cacheKey(v), { at: Date.now(), tracks: state.tracks.slice(), total: state.total });
-      checkSaved(state.tracks.slice(start), v.type === 'liked');
-    })().finally(() => {
-      state.loadingAll = null;
-      $('loading').hidden = true;
-      $('loading').textContent = 'Loading…';
-    });
-    return state.loadingAll;
+  function renderMore() {
+    const chunk = state.order.slice(state.rendered, state.rendered + RENDER_CHUNK);
+    if (!chunk.length) return;
+    state.rendered += chunk.length;
+    appendRows(chunk);
+    // Only check hearts for songs actually drawn.
+    checkSaved(chunk.map((i) => state.tracks[i]), state.view.type === 'liked');
   }
-  async function applyFilter() {
-    const token = state.viewToken;
-    state.filter = searchKey($('filter').value).trim();
-    if (state.filter && state.next) {
-      try {
-        await loadAll(token);
-      } catch (e) {
-        if (e.auth) { handleError(e); return; }
-        toast(`Couldn't load the whole list, so this only searches the songs loaded so far. ${e.message}`);
-      }
-      if (token !== state.viewToken) return;
-      state.filter = searchKey($('filter').value).trim();
+  function setListSub(total) {
+    if (total == null) return;
+    if (state.view.type === 'liked') $('view-sub').textContent = fmtCount(total, 'song');
+    if (state.view.type === 'playlist') $('view-sub').textContent = [state.view.owner, fmtCount(total, 'song')].filter(Boolean).join(' · ');
+  }
+  function showTracks(tracks, total, complete) {
+    const sameStart = state.tracks.length && tracks.length >= state.tracks.length &&
+      state.tracks.every((t, k) => tracks[k] && tracks[k].uri === t.uri);
+    state.tracks = tracks;
+    state.total = total;
+    state.complete = complete;
+    setListSub(total);
+    if (sameStart && !needsWholeList()) {
+      // Same songs with more on the end: keep what's drawn and carry on from there.
+      state.order = visibleIndices();
+      if (state.filter) $('filter-count').textContent = '';
+      requestAnimationFrame(maybeLoadMore);
+      return;
     }
     renderList();
+  }
+
+  // Tiny IndexedDB store for whole lists (they can be too big for localStorage).
+  let dbOpen = null;
+  function idb() {
+    if (!dbOpen) {
+      dbOpen = new Promise((resolve, reject) => {
+        const r = indexedDB.open('pane', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('lists');
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
+    }
+    return dbOpen;
+  }
+  async function idbGet(key) {
+    try {
+      const db = await idb();
+      return await new Promise((resolve) => {
+        const q = db.transaction('lists').objectStore('lists').get(key);
+        q.onsuccess = () => resolve(q.result || null);
+        q.onerror = () => resolve(null);
+      });
+    } catch { return null; }
+  }
+  async function idbSet(key, value) {
+    try { (await idb()).transaction('lists', 'readwrite').objectStore('lists').put(value, key); } catch { /* storage unavailable */ }
+  }
+
+  function listRequest(v) {
+    return v.type === 'liked'
+      ? ['/me/tracks', { limit: 50 }]
+      : [`/playlists/${encodeURIComponent(v.id)}/items`, { limit: 50, additional_types: 'track,episode' }];
+  }
+  // Fetch pages by offset, four at a time.
+  async function fetchPages(v, offsets, token, onPage) {
+    const [path, query] = listRequest(v);
+    const pages = new Array(offsets.length);
+    let k = 0;
+    const worker = async () => {
+      while (k < offsets.length && token === state.viewToken) {
+        const n = k++;
+        pages[n] = parsePage(v, await api(path, { query: Object.assign({}, query, { offset: offsets[n] }) })).items;
+        if (onPage) onPage();
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    return [].concat(...pages.filter(Boolean));
+  }
+  const offsetsFrom = (from, total) => { const o = []; for (let x = from; x < total; x += 50) o.push(x); return o; };
+  // Bring a list up to date, reusing what's cached wherever Spotify's answer shows it still holds.
+  async function syncList(v, cached, token, onFirstPage) {
+    const [path, query] = listRequest(v);
+    const d = await api(path, { query });
+    const first = parsePage(v, d).items;
+    const total = typeof d.total === 'number' ? d.total : first.length;
+    if (cached && cached.tracks && cached.tracks.length) {
+      const ct = cached.tracks;
+      if (v.type === 'liked') {
+        // Newly liked songs appear at the top.
+        const j = first.findIndex((t) => t.uri === ct[0].uri);
+        if (j >= 0 && total === cached.total + j && first.slice(j).every((t, k) => !ct[k] || ct[k].uri === t.uri)) {
+          return { tracks: first.slice(0, j).concat(ct), total };
+        }
+      } else if (total > cached.total && cached.total > first.length &&
+                 first.every((t, k) => ct[k] && ct[k].uri === t.uri)) {
+        // Songs added to the end: fetch from the last song we had, and check it still lines up.
+        const tail = await fetchPages(v, offsetsFrom(cached.total - 1, total), token);
+        if (tail.length && tail[0].uri === ct[ct.length - 1].uri && ct.length + tail.length - 1 === total) {
+          return { tracks: ct.concat(tail.slice(1)), total };
+        }
+      }
+    }
+    if (onFirstPage) onFirstPage(first, total);
+    let done = first.length;
+    const rest = total > first.length
+      ? await fetchPages(v, offsetsFrom(first.length, total), token, () => {
+          done = Math.min(total, done + 50);
+          if (!onFirstPage || needsWholeList()) $('loading').textContent = `Loading songs… ${fmtNum(done)} of ${fmtNum(total)}`;
+        })
+      : [];
+    return { tracks: first.concat(rest), total };
+  }
+  async function openList(v, token) {
+    state.sort = sortFor(v);
+    $('sort').value = state.sort;
+    $('sort').querySelector('option[value="custom"]').hidden = v.type === 'liked';
+    const key = cacheKey(v);
+    let cached = listCache.get(key) || null;
+    if (!cached) {
+      cached = await idbGet(key);
+      if (token !== state.viewToken) return;
+      if (cached && !Array.isArray(cached.tracks)) cached = null;
+      if (cached) listCache.set(key, cached);
+    }
+    if (cached) {
+      showTracks(cached.tracks, cached.total, true);
+      if (v.type === 'playlist' && v.snapshot && cached.snapshot === v.snapshot) return; // unchanged: no requests at all
+      if (v.type === 'liked' && Date.now() - (cached.checked || 0) < 60e3) return;      // checked a moment ago
+    } else {
+      $('loading').hidden = false;
+      $('loading').textContent = 'Loading…';
+    }
+    state.fullPromise = syncList(v, cached, token, (first, total) => {
+      // First time: show the first page straight away when the order allows it.
+      if (!cached && token === state.viewToken && !needsWholeList()) showTracks(first, total, false);
+    }).then((res) => {
+      if (token !== state.viewToken) return;
+      const entry = { tracks: res.tracks, total: res.total, snapshot: v.snapshot || null, checked: Date.now() };
+      listCache.set(key, entry);
+      idbSet(key, entry);
+      const changed = !cached || res.tracks.length !== cached.tracks.length || res.tracks.some((t, k) => t.uri !== cached.tracks[k].uri);
+      if (changed || !state.complete) showTracks(res.tracks, res.total, true);
+    }).catch((e) => {
+      if (token !== state.viewToken) return;
+      if (e.auth) { handleError(e); return; }
+      if (cached) { console.warn('Could not refresh this list:', e.message); state.complete = true; return; }
+      if (v.type === 'playlist' && e.status === 403) {
+        $('filter-wrap').hidden = true;
+        setEmpty('Spotify only lets Pane list the songs in playlists you own or collaborate on. Press play to listen to this one.');
+      } else {
+        setEmpty(e.message);
+      }
+    }).finally(() => {
+      if (token === state.viewToken) { $('loading').hidden = true; $('loading').textContent = 'Loading…'; }
+    });
+  }
+  // Searching or sorting needs every song in the list.
+  async function withWholeList(fn) {
+    const token = state.viewToken;
+    if (!state.complete && state.fullPromise) {
+      $('loading').hidden = false;
+      try { await state.fullPromise; } catch { /* handled in openList */ }
+      if (token !== state.viewToken) return;
+      $('loading').hidden = true;
+    }
+    fn();
     $('scroller').scrollTop = 0;
+  }
+  function applyFilter() {
+    state.filter = searchKey($('filter').value).trim();
+    withWholeList(renderList);
+  }
+  function applySort() {
+    const v = state.view;
+    if (!v || (v.type !== 'liked' && v.type !== 'playlist')) return;
+    state.sort = $('sort').value;
+    const sorts = store.get('sorts') || {};
+    sorts[cacheKey(v)] = state.sort;
+    store.set('sorts', sorts);
+    store.set('sortDefault', state.sort); // lists you haven't sorted yet open in your latest choice
+    withWholeList(renderList);
+  }
+  // Keep the cached Liked Songs in step when a heart changes.
+  function patchLiked(uri, saved) {
+    const c = listCache.get('liked');
+    if (!c) return;
+    if (saved) { c.checked = 0; return; } // a new like is fetched next time Liked Songs opens
+    const k = c.tracks.findIndex((t) => t.uri === uri);
+    if (k < 0) return;
+    c.tracks = c.tracks.slice(0, k).concat(c.tracks.slice(k + 1));
+    c.total = Math.max(0, c.total - 1);
+    idbSet('liked', c);
   }
 
   function appendRows(indices) {
@@ -1312,7 +1491,6 @@ input[type="range"].slider:disabled { cursor: default; }
       play.setAttribute('aria-label', `Play ${t.name}${t.artists ? ' by ' + t.artists : ''}`);
       const art = el('span', 'row-art');
       art.appendChild(t.art ? imgEl(t.art) : icon('i-note'));
-      const mark = el('span', 'playing-mark'); mark.appendChild(icon('i-bars')); art.appendChild(mark);
       const text = el('span', 'row-text');
       text.append(el('span', 'row-title', t.name), el('span', 'row-artist', t.artists));
       play.append(art, text);
@@ -1320,6 +1498,7 @@ input[type="range"].slider:disabled { cursor: default; }
       const heart = el('button', 'icon-btn heart');
       heart.type = 'button';
       heart.dataset.action = 'heart';
+      heart.appendChild(icon('i-heart'));
       if (t.uri && t.playable) {
         heart.dataset.heart = t.uri;
         setHeartButton(heart, state.saved.get(t.uri) === true);
@@ -1327,7 +1506,6 @@ input[type="range"].slider:disabled { cursor: default; }
         heart.disabled = true;
         heart.setAttribute('aria-label', 'Can’t be saved');
       }
-      heart.append(icon('i-heart', 'off'), icon('i-heart-fill', 'on'));
 
       const q = el('button', 'icon-btn queue-btn');
       q.type = 'button';
@@ -1353,6 +1531,8 @@ input[type="range"].slider:disabled { cursor: default; }
   function setHeartButton(btn, on) {
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     btn.setAttribute('aria-label', on ? 'Remove from Liked Songs' : 'Save to Liked Songs');
+    const use = btn.querySelector('use');
+    if (use) use.setAttribute('href', on ? '#i-heart-fill' : '#i-heart');
   }
   function setSaved(uri, on) {
     state.saved.set(uri, on);
@@ -1378,7 +1558,7 @@ input[type="range"].slider:disabled { cursor: default; }
     if (!uri || !SAVEABLE.test(uri)) return;
     const was = state.saved.get(uri) === true;
     setSaved(uri, !was);
-    listCache.delete('liked');
+    patchLiked(uri, !was);
     try {
       await api('/me/library', { method: was ? 'DELETE' : 'PUT', query: { uris: uri } });
       toast(was ? 'Removed from Liked Songs' : 'Saved to Liked Songs');
@@ -1390,6 +1570,8 @@ input[type="range"].slider:disabled { cursor: default; }
 
   // ---------- playlists ----------
   async function loadPlaylists() {
+    const saved = store.get('playlists');
+    if (Array.isArray(saved) && !state.playlists.length) { state.playlists = saved; renderPlaylists(); }
     const all = [];
     let next = ['/me/playlists', { limit: 50 }];
     try {
@@ -1400,10 +1582,26 @@ input[type="range"].slider:disabled { cursor: default; }
       }
     } catch (e) {
       if (e.auth) return handleError(e);
-      toast("Couldn't load your playlists: " + e.message);
+      if (!state.playlists.length) toast("Couldn't load your playlists: " + e.message);
+      return;
     }
-    state.playlists = all;
-    renderPlaylists();
+    // Keep only what the sidebar and list cache need.
+    const slim = all.map((p) => ({
+      id: p.id, uri: p.uri, name: p.name, snapshot_id: p.snapshot_id || null,
+      owner: { display_name: p.owner && p.owner.display_name || '' },
+      images: p.images && p.images.length ? [{ url: pickImg(p.images, 64), width: 64, height: 64 }] : [],
+      items: { total: (p.items || p.tracks || {}).total }
+    }));
+    const changed = JSON.stringify(slim) !== JSON.stringify(state.playlists);
+    state.playlists = slim;
+    store.set('playlists', slim);
+    if (changed) renderPlaylists();
+    // If the open playlist changed on Spotify since it was drawn, bring it up to date.
+    const v = state.view;
+    if (v && v.type === 'playlist') {
+      const p = slim.find((x) => x.id === v.id);
+      if (p && p.snapshot_id && p.snapshot_id !== v.snapshot) { v.snapshot = p.snapshot_id; openList(v, state.viewToken); }
+    }
   }
   function playlistView(p) {
     const meta = p.items || p.tracks;
@@ -1414,7 +1612,8 @@ input[type="range"].slider:disabled { cursor: default; }
       name: p.name || 'Untitled playlist',
       owner: p.owner && p.owner.display_name || '',
       total: meta && typeof meta.total === 'number' ? meta.total : null,
-      image: pickImg(p.images, 64)
+      image: pickImg(p.images, 64),
+      snapshot: p.snapshot_id || null
     };
   }
   function renderPlaylists() {
@@ -2162,30 +2361,85 @@ input[type="range"].slider:disabled { cursor: default; }
   }
 
   // ---------- queue ----------
-  async function loadQueue(token) {
-    $('loading').hidden = false;
-    let d = null;
-    try {
-      d = await api('/me/player/queue');
-    } catch (e) {
-      if (token !== state.viewToken) return;
-      $('loading').hidden = true;
-      if (e.auth) { handleError(e); return; }
-      setEmpty(e.message);
-      return;
+  // Shown in the right-hand panel on wide screens, or as a page on narrower ones.
+  const wideQueue = matchMedia('(min-width: 1181px)');
+  const panelShown = () => wideQueue.matches && !$('queue-panel').hidden;
+  const queueVisible = () => panelShown() || !!(state.view && state.view.type === 'queue');
+  function markQueueBtn() {
+    const on = wideQueue.matches ? !$('queue-panel').hidden : !!(state.view && state.view.type === 'queue');
+    $('queue-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function setQueuePanel(open) {
+    $('queue-panel').hidden = !open;
+    $('app').classList.toggle('with-queue', open);
+    store.set('queuePanel', open);
+    markQueueBtn();
+    if (open) refreshQueue();
+  }
+  let queueFetch = null;
+  function refreshQueue() {
+    if (!queueVisible()) return Promise.resolve();
+    if (queueFetch) return queueFetch;
+    if (!state.pb || !state.pb.uri) { state.queue = null; renderQueues(); return Promise.resolve(); }
+    queueFetch = api('/me/player/queue')
+      .then((d) => {
+        state.queue = d && d.currently_playing
+          ? { now: normTrack(d.currently_playing), next: (d.queue || []).filter(Boolean).map((t) => normTrack(t)) }
+          : null;
+        renderQueues();
+      })
+      .catch((e) => { if (e.auth) handleError(e); else console.warn('Could not read the queue:', e.message); })
+      .finally(() => { queueFetch = null; });
+    return queueFetch;
+  }
+  function renderQueues() {
+    if (panelShown()) renderQueuePanel();
+    if (state.view && state.view.type === 'queue') renderQueueView();
+  }
+  function whereText() {
+    return state.pb && state.pb.uri ? (isRemote() ? `Playing on ${state.pb.device.name}` : 'Playing on this browser') : '';
+  }
+  function renderQueuePanel() {
+    const ul = $('qp-list');
+    const q = state.queue;
+    $('qp-sub').textContent = whereText();
+    if (!q) { ul.replaceChildren(el('li', 'qp-note', 'Nothing playing. Pick a song and what’s coming up shows here.')); return; }
+    const frag = document.createDocumentFragment();
+    const row = (t, k) => {
+      const li = el('li');
+      const b = el('button', 'pl-btn q-row' + (k === 0 ? ' is-current' : ''));
+      b.type = 'button';
+      b.dataset.q = k;
+      b.setAttribute('aria-label', k === 0 ? `Now playing: ${t.name}` : `Skip to ${t.name}`);
+      if (t.art) b.appendChild(imgEl(t.art, 'pl-cover'));
+      else { const c = el('span', 'pl-cover'); c.appendChild(icon('i-note')); b.appendChild(c); }
+      const text = el('span', 'pl-text');
+      text.append(el('span', 'pl-name', t.name), el('span', 'pl-owner', t.artists));
+      b.appendChild(text);
+      li.appendChild(b);
+      return li;
+    };
+    frag.appendChild(el('li', 'section-label', 'Now playing'));
+    frag.appendChild(row(q.now, 0));
+    if (q.next.length) {
+      frag.appendChild(el('li', 'section-label', 'Next up'));
+      q.next.forEach((t, k) => frag.appendChild(row(t, k + 1)));
+      frag.appendChild(el('li', 'qp-note', 'Tap a song to skip to it.'));
+    } else {
+      frag.appendChild(el('li', 'qp-note', 'Nothing queued after this. Add songs with the + button on any song.'));
     }
-    if (token !== state.viewToken) return;
+    ul.replaceChildren(frag);
+  }
+  function renderQueueView() {
+    const q = state.queue;
+    $('view-sub').textContent = whereText();
     $('loading').hidden = true;
-    const now = d && d.currently_playing;
-    $('view-sub').textContent = state.pb && state.pb.uri
-      ? (isRemote() ? `Playing on ${state.pb.device.name}` : 'Playing on this browser')
-      : '';
-    if (!now) { $('list').replaceChildren(); setEmpty(VIEW_TEXT.queue.empty); return; }
-    state.tracks = [normTrack(now), ...((d.queue || []).filter(Boolean).map(normTrack))];
     const list = $('list');
+    if (!q) { list.replaceChildren(); state.tracks = []; setEmpty(VIEW_TEXT.queue.empty); return; }
+    state.tracks = [q.now, ...q.next];
     list.replaceChildren(el('li', 'list-label', 'Now playing'));
     appendRows([0]);
-    if (state.tracks.length > 1) {
+    if (q.next.length) {
       list.appendChild(el('li', 'list-label', 'Next up'));
       appendRows(seq(1, state.tracks.length));
       list.appendChild(el('li', 'list-note', 'Tap a song to skip to it. Spotify doesn’t let apps remove or reorder songs in the queue.'));
@@ -2195,13 +2449,12 @@ input[type="range"].slider:disabled { cursor: default; }
     setEmpty('');
     checkSaved(state.tracks, false);
   }
-  async function skipTo(i) {
-    const t = state.tracks[i];
-    if (!t || i < 1 || remoteBlocked()) return;
-    toast(`Skipping to ${t.name}`);
+  async function skipTo(count, name) {
+    if (count < 1 || remoteBlocked()) return;
+    toast(`Skipping to ${name}`);
     try {
       // Spotify has no "jump to" for the queue, so skip forward one song at a time.
-      for (let k = 0; k < i; k++) await api('/me/player/next', { method: 'POST', query: targetQuery() });
+      for (let k = 0; k < count; k++) await api('/me/player/next', { method: 'POST', query: targetQuery() });
     } catch (e) {
       handleError(e);
     }
@@ -2285,31 +2538,32 @@ input[type="range"].slider:disabled { cursor: default; }
     const v = state.view;
     const t = state.tracks[i];
     if (!t || !t.playable) return Promise.resolve();
-    if (v.type === 'queue') return skipTo(i);
-    // A playlist plays on from the chosen song in the playlist's own order, even mid-search.
-    if (v.type === 'playlist') return startPlayback({ context_uri: v.uri, offset: { position: i } });
-    // Other lists play the songs shown, from the chosen one down.
-    const order = visibleIndices();
+    if (v.type === 'queue') return skipTo(i, t.name);
+    // In its own order, a playlist plays on from the chosen song as the playlist (even mid-search).
+    if (v.type === 'playlist' && state.sort === 'custom') return startPlayback({ context_uri: v.uri, offset: { position: i } });
+    // Sorted lists and other views play the songs in the order shown, from the chosen one down.
+    const order = state.order.length ? state.order : visibleIndices();
     const uris = order.slice(Math.max(0, order.indexOf(i))).map((j) => state.tracks[j]).filter((x) => x.playable).map((x) => x.uri).slice(0, 100);
     return startPlayback({ uris });
   }
   function playCollection() {
     const v = state.view;
     if (!v) return Promise.resolve();
-    if (v.type === 'playlist') return startPlayback({ context_uri: v.uri });
+    if (v.type === 'playlist' && state.sort === 'custom') return startPlayback({ context_uri: v.uri });
     if (v.type === 'home' || v.type === 'lyrics' || v.type === 'search' || v.type === 'queue') {
       toast('Pick a song to start.');
       return Promise.resolve();
     }
-    const first = state.tracks.findIndex((t) => t.playable);
-    if (first === -1) { toast('Nothing to play here yet.'); return Promise.resolve(); }
+    const order = state.order.length ? state.order : visibleIndices();
+    const first = order.find((i) => state.tracks[i] && state.tracks[i].playable);
+    if (first === undefined) { toast('Nothing to play here yet.'); return Promise.resolve(); }
     return playFromRow(first);
   }
   async function addToQueue(uri) {
     try {
       await api('/me/player/queue', { method: 'POST', query: Object.assign({ uri }, targetQuery()) });
       toast('Added to queue');
-      if (state.view && state.view.type === 'queue') setTimeout(() => loadQueue(state.viewToken), 600);
+      setTimeout(refreshQueue, 600);
     } catch (e) {
       if (e.status === 404) toast('Start playing something first, then add songs to the queue.');
       else handleError(e);
@@ -2665,7 +2919,7 @@ input[type="range"].slider:disabled { cursor: default; }
     markPlayingRows();
     if (pb && pb.uri && SAVEABLE.test(pb.uri) && !state.saved.has(pb.uri)) checkSaved([{ uri: pb.uri, playable: true }], false);
     if (state.view && state.view.type === 'lyrics') { renderLyricsHead(); loadLyrics(); }
-    if (state.view && state.view.type === 'queue') loadQueue(state.viewToken);
+    refreshQueue();
   }
   function renderIdle(msg) {
     if (msg) state.idleMsg = msg;
@@ -2823,7 +3077,19 @@ input[type="range"].slider:disabled { cursor: default; }
       seekTo(ln.t);
     });
     $('lyrics-btn').addEventListener('click', () => toggleOverlay('lyrics'));
-    $('queue-btn').addEventListener('click', () => toggleOverlay('queue'));
+    $('queue-btn').addEventListener('click', () => {
+      if (wideQueue.matches) setQueuePanel($('queue-panel').hidden);
+      else toggleOverlay('queue');
+    });
+    wideQueue.addEventListener('change', () => { markQueueBtn(); refreshQueue(); });
+    $('qp-list').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-q]');
+      const q = state.queue;
+      if (!b || !q) return;
+      const k = +b.dataset.q;
+      if (k > 0) skipTo(k, q.next[k - 1].name);
+    });
+    $('sort').addEventListener('change', applySort);
 
     for (const c of document.querySelectorAll('.chip')) {
       c.addEventListener('click', () => {
@@ -2959,6 +3225,7 @@ input[type="range"].slider:disabled { cursor: default; }
       if (state.pb && state.pb.playing) { startTick(); updateProgress(); }
       if (!isLocal()) pollRemote();
       if (state.view && state.view.type === 'lyrics') startLyricsSync();
+      refreshQueue();
     });
 
     // Keep the play history topped up while Pane is open, even in a background tab
@@ -3016,8 +3283,10 @@ input[type="range"].slider:disabled { cursor: default; }
     const r = store.get('range');
     if (['short_term', 'medium_term', 'long_term'].includes(r)) state.range = r;
     renderIdle('Connecting…');
-    loadSdk();
+    setQueuePanel(store.get('queuePanel') !== false);
     pollRemote();
+    // The Spotify player script is the heaviest thing Pane loads, so let the page draw first.
+    (window.requestIdleCallback || ((f) => setTimeout(f, 300)))(loadSdk, { timeout: 1500 });
     api('/me')
       .then((me) => {
         state.me = me;
