@@ -202,7 +202,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 
 /* Sidebar */
 .sidebar { display: flex; flex-direction: column; min-height: 0; padding: 18px 12px 12px; gap: 14px; }
-.brand { font: 600 22px/1 var(--font-display); letter-spacing: -.02em; padding: 0 8px; }
+.brand { font: 600 22px/1 var(--font-display); letter-spacing: -.02em; padding: 0 8px; text-align: center; }
 .nav { display: grid; gap: 2px; }
 .nav-btn, .pl-btn {
   display: flex; align-items: center; gap: 12px; width: 100%;
@@ -237,12 +237,11 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 
 /* Queue panel (right), built like the library sidebar */
 .queue-panel { display: flex; flex-direction: column; min-height: 0; padding: 18px 12px 12px; gap: 10px; }
-.qp-head { display: grid; gap: 3px; padding: 0 8px; }
+.qp-head { display: grid; gap: 3px; padding: 0 8px; justify-items: center; text-align: center; }
 .qp-head .brand { margin: 0; padding: 0; }
 .qp-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 1.45em; }
 .qp-list .section-label { margin-top: 8px; }
-.q-row.is-current .pl-name { color: var(--accent); }
-.qp-note { padding: 10px; font-size: 12px; color: var(--faint); }
+.qp-note { padding: 10px; font-size: 12px; color: var(--faint); text-align: center; }
 
 /* Main */
 .main { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 22px 14px 8px; }
@@ -275,11 +274,31 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 
 .list-tools { display: flex; align-items: center; gap: 8px; margin: 0 10px 12px; }
 .list-tools .search-wrap { flex: 1; min-width: 0; margin: 0; }
-.sort-select {
-  flex: none; max-width: 46%;
-  border: 1px solid var(--rim); background-color: var(--glass-hi); color: var(--fg);
-  border-radius: 999px; padding: 11px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+.sort-wrap { position: relative; flex: none; }
+.sort-btn {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  border: 1px solid var(--rim); background: var(--glass-hi); color: var(--fg);
+  border-radius: 999px; padding: 10px 12px 10px 16px; font-size: 13px; font-weight: 600;
 }
+.sort-btn:hover, .sort-btn[aria-expanded="true"] { background: color-mix(in srgb, var(--fg) 6%, var(--glass-hi)); }
+.sort-btn svg.i { width: 16px; height: 16px; color: var(--muted); transition: transform .15s; }
+.sort-btn[aria-expanded="true"] svg.i { transform: rotate(180deg); }
+.sort-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 25;
+  min-width: 200px; margin: 0; padding: 6px; list-style: none;
+  background: var(--glass-solid); color: var(--fg);
+  border: 1px solid var(--rim); border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+.sort-menu:focus { outline: none; }
+.sort-option {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer;
+}
+.sort-option:hover, .sort-option.active { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.sort-option[aria-selected="true"] { color: var(--accent); font-weight: 600; }
+.sort-option svg.i { width: 16px; height: 16px; visibility: hidden; }
+.sort-option[aria-selected="true"] svg.i { visibility: visible; }
 .filter-input { padding-right: 120px; }
 .filter-input::-webkit-search-cancel-button { margin-right: 4px; }
 .filter-count { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; pointer-events: none; }
@@ -313,7 +332,6 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .row .queue-btn { opacity: 0; }
 .row:hover .queue-btn, .row:focus-within .queue-btn { opacity: 1; }
 @media (hover: none) { .row .queue-btn { opacity: 1; } }
-.row.is-playing .row-title { color: var(--accent); }
 .row.unplayable { opacity: .45; }
 .row.unplayable .row-play { cursor: default; }
 .list-label { padding: 14px 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
@@ -330,7 +348,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .sec-note { color: var(--faint); font-size: 12px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
 .stat {
-  display: grid; gap: 2px; padding: 14px 16px; border-radius: var(--radius-md);
+  display: grid; gap: 2px; justify-items: center; text-align: center; padding: 14px 16px; border-radius: var(--radius-md);
   background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--edge);
 }
 .stat-label { font-size: 12px; color: var(--muted); }
@@ -338,7 +356,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .stat-delta { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; min-height: 1.45em; }
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; margin-top: 10px; }
 .chart-card { margin: 0; padding: 14px 16px 12px; border-radius: var(--radius-md); background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--edge); min-width: 0; }
-.chart-card figcaption { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.chart-card figcaption { font-size: 13px; font-weight: 600; margin-bottom: 10px; text-align: center; }
 .chart-card figcaption span { font-weight: 400; color: var(--faint); margin-left: 6px; }
 .bars { display: flex; align-items: flex-end; gap: 4px; height: 96px; }
 .bars.hours { gap: 2px; }
@@ -353,11 +371,11 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .axis.hours { gap: 2px; justify-content: space-between; }
 .axis.hours span { flex: none; }
 
-.import-card { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 20px; padding: 16px 18px; border-radius: var(--radius-md); background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--edge); }
-.import-text { flex: 1 1 320px; min-width: 0; display: grid; gap: 6px; }
+.import-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 16px 18px; border-radius: var(--radius-md); background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--edge); }
+.import-text { min-width: 0; display: grid; gap: 6px; justify-items: center; }
 .import-text b { font-weight: 600; }
 .import-text > span, .import-text li { color: var(--muted); font-size: 13px; }
-.import-text ol { margin: 2px 0 0; padding-left: 1.2em; display: grid; gap: 4px; max-width: 75ch; }
+.import-text ol { margin: 2px 0 0; padding-left: 1.2em; display: grid; gap: 4px; max-width: 75ch; text-align: left; }
 .import-text a { color: var(--accent); }
 .import-status { margin: 0; font-size: 13px; font-weight: 600; }
 .import-status:empty { display: none; }
@@ -365,7 +383,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .chips { display: inline-flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--rim); margin-left: auto; }
 .chip { border: 0; background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--glass-solid); color: var(--fg); box-shadow: 0 1px 3px var(--shadow); }
-.notice { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--glass-hi); color: var(--muted); }
+.notice { display: flex; align-items: center; justify-content: center; text-align: center; flex-wrap: wrap; gap: 10px 16px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--glass-hi); color: var(--muted); }
 .home-empty { color: var(--muted); padding: 6px 0; }
 
 .artists { list-style: none; margin: 0; padding: 2px 0 8px; display: grid; grid-auto-flow: column; grid-auto-columns: 96px; gap: 12px; overflow-x: auto; scrollbar-width: thin; }
@@ -402,7 +420,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .rise-btn img, .rise-btn .ph { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: var(--rim); }
 
 /* Lyrics */
-.lyrics { padding: 6px 12px 40vh; }
+.lyrics { padding: 6px 12px 40vh; text-align: center; }
 .ly-line {
   margin: 0; padding: 6px 0;
   font: 600 clamp(20px, 2.1vw, 26px)/1.35 var(--font-display); letter-spacing: -.01em;
@@ -412,7 +430,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .lyrics.synced .ly-line { cursor: pointer; }
 .lyrics.synced .ly-line:hover { color: var(--muted); }
 .ly-line.past { color: var(--muted); }
-.ly-line.now { color: var(--fg); }
+.ly-line.now { color: var(--fg); display: block; }
 .lyrics.plain .ly-line { color: var(--fg); cursor: default; }
 .ly-gap { color: var(--faint); }
 .ly-msg { color: var(--muted); font-size: 15px; margin: 24px 0; }
@@ -564,6 +582,8 @@ input[type="range"].slider:disabled { cursor: default; }
   <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></g></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/></g></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6.5 9.5l5.5 5.5 5.5-5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h11"/><path d="M4 11h11"/><path d="M4 16h7"/><path d="M17 13.5v6.5"/><circle cx="15" cy="20" r="2"/><path d="M17 13.5l3.5-1.2"/></g></symbol>
   <symbol id="i-lyrics" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/><path d="M8 8.5h8"/><path d="M8 12h5"/></g></symbol>
   <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5v5a1 1 0 0 0 1 1h3l4.3 3.6a.8.8 0 0 0 1.3-.6V5.5a.8.8 0 0 0-1.3-.6L8 8.5H5a1 1 0 0 0-1 1z" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16.5 9a4.2 4.2 0 0 1 0 6"/><path d="M19 6.5a7.8 7.8 0 0 1 0 11"/></g></symbol>
@@ -641,15 +661,20 @@ input[type="range"].slider:disabled { cursor: default; }
         <input class="search-input filter-input" id="filter" type="search" placeholder="Find a song or artist" aria-label="Find a song or artist in this list" autocomplete="off">
         <span class="filter-count" id="filter-count" aria-live="polite"></span>
       </div>
-      <select class="sort-select" id="sort" aria-label="Sort songs">
-        <option value="custom">Custom order</option>
-        <option value="added-desc">Recently added</option>
-        <option value="added-asc">Oldest added</option>
-        <option value="title">Title</option>
-        <option value="artist">Artist</option>
-        <option value="album">Album</option>
-        <option value="duration">Duration</option>
-      </select>
+      <div class="sort-wrap">
+        <button class="sort-btn" id="sort-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="sort-menu">
+          <span id="sort-label">Custom order</span><svg class="i"><use href="#i-chevron"/></svg>
+        </button>
+        <ul class="sort-menu" id="sort-menu" role="listbox" aria-label="Sort songs" tabindex="-1" hidden>
+          <li class="sort-option" role="option" data-value="custom" aria-selected="false">Custom order<svg class="i"><use href="#i-check"/></svg></li>
+          <li class="sort-option" role="option" data-value="added-desc" aria-selected="false">Recently added<svg class="i"><use href="#i-check"/></svg></li>
+          <li class="sort-option" role="option" data-value="added-asc" aria-selected="false">Oldest added<svg class="i"><use href="#i-check"/></svg></li>
+          <li class="sort-option" role="option" data-value="title" aria-selected="false">Title<svg class="i"><use href="#i-check"/></svg></li>
+          <li class="sort-option" role="option" data-value="artist" aria-selected="false">Artist<svg class="i"><use href="#i-check"/></svg></li>
+          <li class="sort-option" role="option" data-value="album" aria-selected="false">Album<svg class="i"><use href="#i-check"/></svg></li>
+          <li class="sort-option" role="option" data-value="duration" aria-selected="false">Duration<svg class="i"><use href="#i-check"/></svg></li>
+        </ul>
+      </div>
     </div>
     <div class="scroller" id="scroller">
       <div class="home" id="home" hidden>
@@ -861,6 +886,8 @@ input[type="range"].slider:disabled { cursor: default; }
     return (sorted.find((i) => (i.width || i.height) >= target) || sorted[sorted.length - 1]).url;
   };
   const redirectUri = () => location.origin + location.pathname.replace(/index\.html$/, '');
+  // Run something once the page is idle (or after `wait` ms at the latest).
+  const whenIdle = (fn, wait) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 0)))(fn, { timeout: 2000 }), wait || 0);
 
   class ApiError extends Error {
     constructor(status, message, auth) { super(message); this.status = status; this.auth = !!auth; }
@@ -1235,6 +1262,7 @@ input[type="range"].slider:disabled { cursor: default; }
   // playlist (or liked since last time) are fetched on their own. Rows are drawn 100 at a
   // time as you scroll.
   const RENDER_CHUNK = 100;
+  const FIRST_CHUNK = 40; // enough to fill the screen; the rest is drawn as you scroll
   const seq = (a, b) => Array.from({ length: Math.max(0, b - a) }, (_, k) => a + k);
   const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
   const SORTS = {
@@ -1272,7 +1300,7 @@ input[type="range"].slider:disabled { cursor: default; }
     state.order = visibleIndices();
     state.rendered = 0;
     $('list').replaceChildren();
-    renderMore();
+    renderMore(FIRST_CHUNK);
     if (state.filter) {
       $('filter-count').textContent = `${fmtNum(state.order.length)} of ${fmtNum(state.tracks.length)}`;
       setEmpty(state.order.length ? '' : `Nothing here matches “${$('filter').value.trim()}”.`);
@@ -1282,8 +1310,8 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     requestAnimationFrame(maybeLoadMore);
   }
-  function renderMore() {
-    const chunk = state.order.slice(state.rendered, state.rendered + RENDER_CHUNK);
+  function renderMore(size) {
+    const chunk = state.order.slice(state.rendered, state.rendered + (size || RENDER_CHUNK));
     if (!chunk.length) return;
     state.rendered += chunk.length;
     appendRows(chunk);
@@ -1344,24 +1372,24 @@ input[type="range"].slider:disabled { cursor: default; }
       ? ['/me/tracks', { limit: 50 }]
       : [`/playlists/${encodeURIComponent(v.id)}/items`, { limit: 50, additional_types: 'track,episode' }];
   }
-  // Fetch pages by offset, four at a time.
-  async function fetchPages(v, offsets, token, onPage) {
+  // Fetch pages by offset, a few at a time.
+  async function fetchPages(v, offsets, opts = {}) {
     const [path, query] = listRequest(v);
     const pages = new Array(offsets.length);
     let k = 0;
     const worker = async () => {
-      while (k < offsets.length && token === state.viewToken) {
+      while (k < offsets.length) {
         const n = k++;
         pages[n] = parsePage(v, await api(path, { query: Object.assign({}, query, { offset: offsets[n] }) })).items;
-        if (onPage) onPage();
+        if (opts.onPage) opts.onPage(pages[n].length);
       }
     };
-    await Promise.all([worker(), worker(), worker(), worker()]);
+    await Promise.all(Array.from({ length: Math.min(opts.concurrency || 4, offsets.length || 1) }, worker));
     return [].concat(...pages.filter(Boolean));
   }
   const offsetsFrom = (from, total) => { const o = []; for (let x = from; x < total; x += 50) o.push(x); return o; };
   // Bring a list up to date, reusing what's cached wherever Spotify's answer shows it still holds.
-  async function syncList(v, cached, token, onFirstPage) {
+  async function syncList(v, cached, opts = {}) {
     const [path, query] = listRequest(v);
     const d = await api(path, { query });
     const first = parsePage(v, d).items;
@@ -1377,26 +1405,39 @@ input[type="range"].slider:disabled { cursor: default; }
       } else if (total > cached.total && cached.total > first.length &&
                  first.every((t, k) => ct[k] && ct[k].uri === t.uri)) {
         // Songs added to the end: fetch from the last song we had, and check it still lines up.
-        const tail = await fetchPages(v, offsetsFrom(cached.total - 1, total), token);
+        const tail = await fetchPages(v, offsetsFrom(cached.total - 1, total), opts);
         if (tail.length && tail[0].uri === ct[ct.length - 1].uri && ct.length + tail.length - 1 === total) {
           return { tracks: ct.concat(tail.slice(1)), total };
         }
       }
     }
-    if (onFirstPage) onFirstPage(first, total);
+    if (opts.onFirstPage) opts.onFirstPage(first, total);
     let done = first.length;
     const rest = total > first.length
-      ? await fetchPages(v, offsetsFrom(first.length, total), token, () => {
-          done = Math.min(total, done + 50);
-          if (!onFirstPage || needsWholeList()) $('loading').textContent = `Loading songs… ${fmtNum(done)} of ${fmtNum(total)}`;
-        })
+      ? await fetchPages(v, offsetsFrom(first.length, total), Object.assign({}, opts, {
+          onPage: (n) => { done += n; if (opts.onProgress) opts.onProgress(Math.min(done, total), total); }
+        }))
       : [];
     return { tracks: first.concat(rest), total };
   }
+  // One download per list at a time, shared by whoever needs it (the open page or the background warm-up).
+  const inflight = new Map();
+  function syncAndSave(v, cached, opts) {
+    const key = cacheKey(v);
+    if (inflight.has(key)) return inflight.get(key);
+    const job = syncList(v, cached, opts).then((res) => {
+      const entry = { tracks: res.tracks, total: res.total, snapshot: v.snapshot || null, checked: Date.now() };
+      listCache.set(key, entry);
+      idbSet(key, entry);
+      return entry;
+    }).finally(() => inflight.delete(key));
+    inflight.set(key, job);
+    return job;
+  }
   async function openList(v, token) {
     state.sort = sortFor(v);
-    $('sort').value = state.sort;
-    $('sort').querySelector('option[value="custom"]').hidden = v.type === 'liked';
+    setSortUI(state.sort);
+    $('sort-menu').querySelector('[data-value="custom"]').hidden = v.type === 'liked';
     const key = cacheKey(v);
     let cached = listCache.get(key) || null;
     if (!cached) {
@@ -1413,18 +1454,17 @@ input[type="range"].slider:disabled { cursor: default; }
       $('loading').hidden = false;
       $('loading').textContent = 'Loading…';
     }
-    state.fullPromise = syncList(v, cached, token, (first, total) => {
+    const here = () => token === state.viewToken;
+    state.fullPromise = syncAndSave(v, cached, {
       // First time: show the first page straight away when the order allows it.
-      if (!cached && token === state.viewToken && !needsWholeList()) showTracks(first, total, false);
+      onFirstPage: (first, total) => { if (!cached && here() && !needsWholeList()) showTracks(first, total, false); },
+      onProgress: (done, total) => { if (here() && needsWholeList()) $('loading').textContent = `Loading songs… ${fmtNum(done)} of ${fmtNum(total)}`; }
     }).then((res) => {
-      if (token !== state.viewToken) return;
-      const entry = { tracks: res.tracks, total: res.total, snapshot: v.snapshot || null, checked: Date.now() };
-      listCache.set(key, entry);
-      idbSet(key, entry);
+      if (!here()) return;
       const changed = !cached || res.tracks.length !== cached.tracks.length || res.tracks.some((t, k) => t.uri !== cached.tracks[k].uri);
       if (changed || !state.complete) showTracks(res.tracks, res.total, true);
     }).catch((e) => {
-      if (token !== state.viewToken) return;
+      if (!here()) return;
       if (e.auth) { handleError(e); return; }
       if (cached) { console.warn('Could not refresh this list:', e.message); state.complete = true; return; }
       if (v.type === 'playlist' && e.status === 403) {
@@ -1434,8 +1474,33 @@ input[type="range"].slider:disabled { cursor: default; }
         setEmpty(e.message);
       }
     }).finally(() => {
-      if (token === state.viewToken) { $('loading').hidden = true; $('loading').textContent = 'Loading…'; }
+      if (here()) { $('loading').hidden = true; $('loading').textContent = 'Loading…'; }
     });
+  }
+  // Quietly bring every list you can open up to date in the background, one request at a
+  // time, so opening any of them is instant. Lists Spotify says haven't changed are skipped.
+  async function warmLists() {
+    if (state.warming || !state.me) return;
+    state.warming = true;
+    try {
+      const mine = state.playlists.filter((p) => p.collaborative || (p.owner && p.owner.id === state.me.id)).map(playlistView);
+      for (const v of [{ type: 'liked' }].concat(mine)) {
+        const key = cacheKey(v);
+        if (inflight.has(key)) continue;
+        let cached = listCache.get(key) || await idbGet(key);
+        if (cached && !Array.isArray(cached.tracks)) cached = null;
+        if (cached && v.type === 'playlist' && v.snapshot && cached.snapshot === v.snapshot) continue;
+        if (cached && v.type === 'liked' && Date.now() - (cached.checked || 0) < 10 * 60e3) continue;
+        try {
+          await syncAndSave(v, cached, { concurrency: 1 });
+        } catch (e) {
+          if (e.auth || e.status === 429) return; // stop and leave Spotify alone for now
+        }
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    } finally {
+      state.warming = false;
+    }
   }
   // Searching or sorting needs every song in the list.
   async function withWholeList(fn) {
@@ -1453,10 +1518,46 @@ input[type="range"].slider:disabled { cursor: default; }
     state.filter = searchKey($('filter').value).trim();
     withWholeList(renderList);
   }
-  function applySort() {
+  // The sort menu: Pane's own list, so it follows the theme (the browser's menu didn't).
+  function setSortUI(value) {
+    for (const o of $('sort-menu').children) o.setAttribute('aria-selected', o.dataset.value === value ? 'true' : 'false');
+    const chosen = $('sort-menu').querySelector(`[data-value="${value}"]`);
+    $('sort-label').textContent = chosen ? chosen.firstChild.textContent : 'Sort';
+  }
+  function openSortMenu() {
+    const menu = $('sort-menu');
+    menu.hidden = false;
+    $('sort-btn').setAttribute('aria-expanded', 'true');
+    const items = [...menu.children].filter((o) => !o.hidden);
+    const sel = items.find((o) => o.getAttribute('aria-selected') === 'true') || items[0];
+    items.forEach((o) => o.classList.toggle('active', o === sel));
+    menu.focus();
+  }
+  function closeSortMenu(refocus) {
+    $('sort-menu').hidden = true;
+    $('sort-btn').setAttribute('aria-expanded', 'false');
+    if (refocus) $('sort-btn').focus();
+  }
+  function sortMenuKey(e) {
+    const items = [...$('sort-menu').children].filter((o) => !o.hidden);
+    let i = items.findIndex((o) => o.classList.contains('active'));
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      i = (i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items.forEach((o, k) => o.classList.toggle('active', k === i));
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (items[i]) { closeSortMenu(true); applySort(items[i].dataset.value); }
+    } else if (e.key === 'Escape' || e.key === 'Tab') {
+      e.preventDefault();
+      closeSortMenu(true);
+    }
+  }
+  function applySort(value) {
     const v = state.view;
     if (!v || (v.type !== 'liked' && v.type !== 'playlist')) return;
-    state.sort = $('sort').value;
+    state.sort = value;
+    setSortUI(value);
     const sorts = store.get('sorts') || {};
     sorts[cacheKey(v)] = state.sort;
     store.set('sorts', sorts);
@@ -1588,7 +1689,8 @@ input[type="range"].slider:disabled { cursor: default; }
     // Keep only what the sidebar and list cache need.
     const slim = all.map((p) => ({
       id: p.id, uri: p.uri, name: p.name, snapshot_id: p.snapshot_id || null,
-      owner: { display_name: p.owner && p.owner.display_name || '' },
+      owner: { id: p.owner && p.owner.id || '', display_name: p.owner && p.owner.display_name || '' },
+      collaborative: !!p.collaborative,
       images: p.images && p.images.length ? [{ url: pickImg(p.images, 64), width: 64, height: 64 }] : [],
       items: { total: (p.items || p.tracks || {}).total }
     }));
@@ -1602,6 +1704,7 @@ input[type="range"].slider:disabled { cursor: default; }
       const p = slim.find((x) => x.id === v.id);
       if (p && p.snapshot_id && p.snapshot_id !== v.snapshot) { v.snapshot = p.snapshot_id; openList(v, state.viewToken); }
     }
+    whenIdle(warmLists, 2500);
   }
   function playlistView(p) {
     const meta = p.items || p.tracks;
@@ -2156,7 +2259,10 @@ input[type="range"].slider:disabled { cursor: default; }
       const text = el('span', 'tt-text');
       text.append(el('b', null, t.name), el('small', null, t.artists));
       b.append(el('span', 'tt-rank', String(i + 1)), art, text, el('span', 'tt-time', t.duration ? fmtTime(t.duration) : ''));
-      b.addEventListener('click', () => { activateIfHere(); startPlayback({ uris: list.slice(i).map((x) => x.uri) }).catch(handleError); });
+      b.addEventListener('click', () => {
+        activateIfHere();
+        startPlayback({ uris: list.slice(i).map((x) => x.uri) }, { uri: t.uri, name: t.name, artists: t.artists, art: t.image, duration: t.duration }).catch(handleError);
+      });
       li.appendChild(b);
       frag.appendChild(li);
     });
@@ -2377,12 +2483,20 @@ input[type="range"].slider:disabled { cursor: default; }
     if (open) refreshQueue();
   }
   let queueFetch = null;
+  let queueRetries = 0;
   function refreshQueue() {
     if (!queueVisible()) return Promise.resolve();
     if (queueFetch) return queueFetch;
     if (!state.pb || !state.pb.uri) { state.queue = null; renderQueues(); return Promise.resolve(); }
     queueFetch = api('/me/player/queue')
       .then((d) => {
+        const now = d && d.currently_playing;
+        if (now && state.pb && now.uri !== state.pb.uri && queueRetries < 5) {
+          queueRetries++;
+          setTimeout(refreshQueue, 700);
+          return;
+        }
+        queueRetries = 0;
         state.queue = d && d.currently_playing
           ? { now: normTrack(d.currently_playing), next: (d.queue || []).filter(Boolean).map((t) => normTrack(t)) }
           : null;
@@ -2451,14 +2565,17 @@ input[type="range"].slider:disabled { cursor: default; }
   }
   async function skipTo(count, name) {
     if (count < 1 || remoteBlocked()) return;
-    toast(`Skipping to ${name}`);
+    const q = state.queue;
+    const prev = q && q.next[count - 1] && q.next[count - 1].name === name ? expectTrack(q.next[count - 1]) : state.pb;
+    if (prev === state.pb) toast(`Skipping to ${name}`);
     try {
       // Spotify has no "jump to" for the queue, so skip forward one song at a time.
       for (let k = 0; k < count; k++) await api('/me/player/next', { method: 'POST', query: targetQuery() });
     } catch (e) {
+      revertTo(prev);
       handleError(e);
     }
-    pollSoon();
+    pollSoon(400);
   }
 
   // ---------- playback ----------
@@ -2480,27 +2597,75 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     return false;
   }
-  async function startPlayback(body) {
+  // ---------- instant feedback ----------
+  // Spotify takes a moment to confirm a change, so the player bar (and queue) show it
+  // straight away, and older reports are ignored for a few seconds while Spotify catches up.
+  function expectTrack(t) {
+    const prev = state.pb;
+    if (!t || !t.uri) return prev;
+    const base = prev || {
+      source: 'local', shuffle: false, repeat: 'off', noPrev: false, noNext: false, noSeek: false,
+      device: { id: state.deviceId, name: 'This browser', type: 'Computer', volume: null, supportsVolume: true, restricted: false }
+    };
+    state.expect = { uri: t.uri, until: Date.now() + 4000 };
+    if (state.queue) {
+      const k = state.queue.next.findIndex((x) => x.uri === t.uri);
+      state.queue = k >= 0 ? { now: state.queue.next[k], next: state.queue.next.slice(k + 1) } : null;
+      if (state.queue) renderQueues();
+    }
+    setPlayback(Object.assign({}, base, {
+      uri: t.uri, name: t.name, artists: t.artists, firstArtist: String(t.artists || '').split(', ')[0], album: t.album || '',
+      images: t.art ? [{ url: t.art, width: 64, height: 64 }] : [], playing: true, position: 0, duration: t.duration || 0
+    }));
+    return prev;
+  }
+  function revertTo(prev) {
+    state.expect = null;
+    if (prev) setPlayback(prev); else setPlayback(null);
+    refreshQueue();
+  }
+  // True while a report still shows the old song (or nothing) just after Pane asked for a new one.
+  function staleReport(uri) {
+    const x = state.expect;
+    if (!x) return false;
+    if (Date.now() > x.until || uri === x.uri) { state.expect = null; return false; }
+    return true;
+  }
+  async function startPlayback(body, t) {
     if (isRemote()) {
       if (remoteBlocked()) return;
+      const prev = expectTrack(t);
       try {
         await api('/me/player/play', { method: 'PUT', body });
       } catch (e) {
+        revertTo(prev);
         if (e.status !== 404) throw e;
-        toast(`${state.pb.device.name} isn't responding. Open Spotify there, or pick another device from the speaker menu.`);
+        toast(`${state.pb ? state.pb.device.name : 'That device'} isn't responding. Open Spotify there, or pick another device from the speaker menu.`);
       }
-      pollSoon();
+      pollSoon(400);
       return;
     }
     if (!state.deviceId) { toast('The player is still connecting. Try again in a moment.'); return; }
     activate();
+    const prev = expectTrack(t);
     try {
-      await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
+      try {
+        await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
+      } catch (e) {
+        if (e.status !== 404) throw e;
+        await api('/me/player', { method: 'PUT', body: { device_ids: [state.deviceId], play: false } });
+        await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
+      }
     } catch (e) {
-      if (e.status !== 404) throw e;
-      await api('/me/player', { method: 'PUT', body: { device_ids: [state.deviceId], play: false } });
-      await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
+      revertTo(prev);
+      throw e;
     }
+  }
+  function skipNext() {
+    const q = state.queue;
+    const prev = q && state.pb && q.now.uri === state.pb.uri && q.next[0] ? expectTrack(q.next[0]) : state.pb;
+    if (isLocal()) { state.player.nextTrack().catch(() => revertTo(prev)); return; }
+    if (isRemote()) remoteCommand('/me/player/next', 'POST');
   }
   async function togglePlayback() {
     if (isLocal()) { state.player.togglePlay(); return; }
@@ -2522,7 +2687,7 @@ input[type="range"].slider:disabled { cursor: default; }
   async function remoteCommand(path, method, query) {
     if (remoteBlocked()) return;
     try { await api(path, { method, query }); } catch (e) { handleError(e); }
-    pollSoon();
+    pollSoon(400);
   }
   function seekTo(pos) {
     pos = Math.max(0, Math.round(pos));
@@ -2540,11 +2705,11 @@ input[type="range"].slider:disabled { cursor: default; }
     if (!t || !t.playable) return Promise.resolve();
     if (v.type === 'queue') return skipTo(i, t.name);
     // In its own order, a playlist plays on from the chosen song as the playlist (even mid-search).
-    if (v.type === 'playlist' && state.sort === 'custom') return startPlayback({ context_uri: v.uri, offset: { position: i } });
+    if (v.type === 'playlist' && state.sort === 'custom') return startPlayback({ context_uri: v.uri, offset: { position: i } }, t);
     // Sorted lists and other views play the songs in the order shown, from the chosen one down.
     const order = state.order.length ? state.order : visibleIndices();
     const uris = order.slice(Math.max(0, order.indexOf(i))).map((j) => state.tracks[j]).filter((x) => x.playable).map((x) => x.uri).slice(0, 100);
-    return startPlayback({ uris });
+    return startPlayback({ uris }, t);
   }
   function playCollection() {
     const v = state.view;
@@ -2687,6 +2852,7 @@ input[type="range"].slider:disabled { cursor: default; }
     try {
       const d = await api('/me/player', { query: { additional_types: 'track,episode' } });
       if (isLocal()) return;
+      if (staleReport(d && d.item ? d.item.uri : null)) { pollSoon(500); return; }
       if (!d || !d.device) setPlayback(null);
       else if (!(state.deviceId && d.device.id === state.deviceId)) setPlayback(fromApi(d));
     } catch (e) {
@@ -2701,9 +2867,9 @@ input[type="range"].slider:disabled { cursor: default; }
     if (document.hidden || isLocal()) return;
     state.pollTimer = setTimeout(pollRemote, isRemote() && state.pb.playing ? 5000 : 15000);
   }
-  function pollSoon() {
+  function pollSoon(ms) {
     clearTimeout(state.pollTimer);
-    state.pollTimer = setTimeout(pollRemote, 700);
+    state.pollTimer = setTimeout(pollRemote, ms || 700);
   }
 
   // ---------- device menu ----------
@@ -2767,6 +2933,7 @@ input[type="range"].slider:disabled { cursor: default; }
   async function transferTo(it) {
     closeDeviceMenu();
     if (it.active) return;
+    state.expect = null;
     if (it.id === state.deviceId) activate();
     const play = !!(state.pb && state.pb.playing);
     try {
@@ -2983,6 +3150,7 @@ input[type="range"].slider:disabled { cursor: default; }
     else if (state.view && state.view.type === 'lyrics') syncLyrics(true);
   }
   function onPlayerState(s) {
+    if (staleReport(s && s.track_window && s.track_window.current_track ? s.track_window.current_track.uri : null)) return;
     if (!s || !s.track_window || !s.track_window.current_track) {
       // Playback has left this browser (or never started here). Find out where it is.
       if (isLocal()) renderIdle(state.deviceId ? 'Ready. Pick a song to start.' : null);
@@ -3089,7 +3257,20 @@ input[type="range"].slider:disabled { cursor: default; }
       const k = +b.dataset.q;
       if (k > 0) skipTo(k, q.next[k - 1].name);
     });
-    $('sort').addEventListener('change', applySort);
+    $('sort-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if ($('sort-menu').hidden) openSortMenu(); else closeSortMenu(false);
+    });
+    $('sort-menu').addEventListener('keydown', sortMenuKey);
+    $('sort-menu').addEventListener('click', (e) => {
+      const o = e.target.closest('.sort-option');
+      if (!o) return;
+      closeSortMenu(true);
+      applySort(o.dataset.value);
+    });
+    document.addEventListener('click', (e) => {
+      if (!$('sort-menu').hidden && !e.target.closest('.sort-wrap')) closeSortMenu(false);
+    });
 
     for (const c of document.querySelectorAll('.chip')) {
       c.addEventListener('click', () => {
@@ -3129,10 +3310,7 @@ input[type="range"].slider:disabled { cursor: default; }
       if (isLocal()) state.player.previousTrack();
       else if (isRemote()) remoteCommand('/me/player/previous', 'POST');
     });
-    $('next').addEventListener('click', () => {
-      if (isLocal()) state.player.nextTrack();
-      else if (isRemote()) remoteCommand('/me/player/next', 'POST');
-    });
+    $('next').addEventListener('click', skipNext);
     $('shuffle').addEventListener('click', () => {
       if (!state.pb) return;
       const on = !state.pb.shuffle;
@@ -3286,11 +3464,12 @@ input[type="range"].slider:disabled { cursor: default; }
     setQueuePanel(store.get('queuePanel') !== false);
     pollRemote();
     // The Spotify player script is the heaviest thing Pane loads, so let the page draw first.
-    (window.requestIdleCallback || ((f) => setTimeout(f, 300)))(loadSdk, { timeout: 1500 });
+    whenIdle(loadSdk, 0);
     api('/me')
       .then((me) => {
         state.me = me;
         $('who').textContent = me && me.display_name ? me.display_name : '';
+        whenIdle(warmLists, 2500);
         if (state.view && state.view.type === 'home') $('view-title').textContent = greeting();
       })
       .catch(handleError);
