@@ -262,6 +262,10 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   border: 1px solid var(--rim); background: var(--glass-hi);
 }
 
+.filter-input { padding-right: 120px; }
+.filter-input::-webkit-search-cancel-button { margin-right: 4px; }
+.filter-count { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; pointer-events: none; }
+
 .scroller { position: relative; flex: 1; min-height: 0; overflow-y: auto; padding: 0 2px 8px; contain: content; }
 .list { list-style: none; margin: 0; padding: 0; }
 .row {
@@ -318,12 +322,22 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .bar { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; }
 .bar i { display: block; width: 100%; height: max(2px, var(--h, 0%)); border-radius: 4px 4px 2px 2px; background: var(--bar); }
 .bar.hi i { background: var(--accent); }
+.bar.partial i { opacity: .5; }
 .bar.nodata i { background: transparent; border-bottom: 2px dotted var(--rim); border-radius: 0; height: 2px; }
 .axis { display: flex; gap: 4px; margin-top: 6px; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .axis span { flex: 1 1 0; min-width: 0; text-align: center; overflow: hidden; white-space: nowrap; }
 .axis span.hi { color: var(--fg); font-weight: 600; }
 .axis.hours { gap: 2px; justify-content: space-between; }
 .axis.hours span { flex: none; }
+
+.import-card { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 20px; padding: 16px 18px; border-radius: var(--radius-md); background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--edge); }
+.import-text { flex: 1 1 320px; min-width: 0; display: grid; gap: 6px; }
+.import-text b { font-weight: 600; }
+.import-text > span, .import-text li { color: var(--muted); font-size: 13px; }
+.import-text ol { margin: 2px 0 0; padding-left: 1.2em; display: grid; gap: 4px; max-width: 75ch; }
+.import-text a { color: var(--accent); }
+.import-status { margin: 0; font-size: 13px; font-weight: 600; }
+.import-status:empty { display: none; }
 
 .chips { display: inline-flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--rim); margin-left: auto; }
 .chip { border: 0; background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -332,6 +346,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .home-empty { color: var(--muted); padding: 6px 0; }
 
 .artists { list-style: none; margin: 0; padding: 2px 0 8px; display: grid; grid-auto-flow: column; grid-auto-columns: 96px; gap: 12px; overflow-x: auto; scrollbar-width: thin; }
+.artists:has(> .home-empty) { display: block; }
 .artist { display: grid; gap: 8px; justify-items: center; width: 100%; border: 0; background: none; padding: 0; text-align: center; }
 .artist-img { width: 84px; height: 84px; border-radius: 50%; overflow: hidden; background: var(--rim); display: grid; place-items: center; color: var(--faint); transition: transform .2s ease; }
 .artist:hover .artist-img { transform: scale(1.03); }
@@ -591,6 +606,11 @@ input[type="range"].slider:disabled { cursor: default; }
       <svg class="i"><use href="#i-search"/></svg>
       <input class="search-input" id="search" type="search" placeholder="Songs or artists" aria-label="Search songs or artists" autocomplete="off">
     </div>
+    <div class="search-wrap" id="filter-wrap" hidden>
+      <svg class="i"><use href="#i-search"/></svg>
+      <input class="search-input filter-input" id="filter" type="search" placeholder="Find a song or artist" aria-label="Find a song or artist in this list" autocomplete="off">
+      <span class="filter-count" id="filter-count" aria-live="polite"></span>
+    </div>
     <div class="scroller" id="scroller">
       <div class="home" id="home" hidden>
         <section aria-labelledby="h-week">
@@ -602,9 +622,34 @@ input[type="range"].slider:disabled { cursor: default; }
           </div>
           <div class="charts">
             <figure class="chart-card"><figcaption>Daily listening<span>last 14 days</span></figcaption><div class="bars" id="c-days"></div><div class="axis" id="c-days-axis"></div></figure>
-            <figure class="chart-card"><figcaption>When you listen<span>last 30 days</span></figcaption><div class="bars hours" id="c-hours"></div><div class="axis hours"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span></div></figure>
+            <figure class="chart-card"><figcaption>When you listen<span id="c-hours-range">last 30 days</span></figcaption><div class="bars hours" id="c-hours"></div><div class="axis hours"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span></div></figure>
           </div>
         </section>
+        <section aria-labelledby="h-time" id="time-wrap" hidden>
+          <div class="sec-head"><h3 id="h-time">Over time</h3><span class="sec-note" id="time-note"></span></div>
+          <div class="stats">
+            <div class="stat"><span class="stat-label">Listening time</span><span class="stat-value" id="t-total">—</span></div>
+            <div class="stat"><span class="stat-label">Songs played</span><span class="stat-value" id="t-plays">—</span></div>
+            <div class="stat"><span class="stat-label">Daily average</span><span class="stat-value" id="t-avg">—</span></div>
+          </div>
+          <div class="charts">
+            <figure class="chart-card"><figcaption>Monthly listening<span>last 12 months</span></figcaption><div class="bars" id="c-months"></div><div class="axis" id="c-months-axis"></div></figure>
+          </div>
+        </section>
+        <div class="import-card" id="import-card">
+          <div class="import-text">
+            <b id="import-title">Get your complete listening history</b>
+            <span id="import-desc"></span>
+            <ol id="import-steps">
+              <li>On <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener">Spotify’s privacy page</a>, under Download your data, tick Extended streaming history for everything since you joined, or Account data for the last year. Extended history usually takes a few days, though Spotify says it can take up to 30.</li>
+              <li>Confirm the email Spotify sends, then wait for the download link.</li>
+              <li>Choose the .zip here. There’s no need to unzip it.</li>
+            </ol>
+            <p class="import-status" id="import-status" role="status"></p>
+          </div>
+          <button class="small-btn" id="import-btn" type="button">Choose file</button>
+          <input id="import-file" type="file" accept=".zip,.json" multiple hidden>
+        </div>
         <section aria-labelledby="h-top">
           <div class="sec-head">
             <h3 id="h-top">Your top artists</h3>
@@ -704,6 +749,7 @@ input[type="range"].slider:disabled { cursor: default; }
   ].join(' ');
   const DAY = 864e5;
   const TOP_CACHE_MS = 6 * 3600e3;
+  const LIST_CACHE_MS = 10 * 60e3;
   const HISTORY_CAP = 5000;
 
   // ---------- small helpers ----------
@@ -748,9 +794,17 @@ input[type="range"].slider:disabled { cursor: default; }
     const h = Math.floor(mins / 60), m = mins % 60;
     return m ? `${h} h ${m} min` : `${h} h`;
   };
+  // Lower-case and strip accents, so "beyonce" finds "Beyoncé".
+  const fold = (s) => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  // Words only, each preceded by a space, so a search word can be matched to the start of a word ("bey" finds Beyoncé, "14" doesn't find 114).
+  const searchKey = (s) => ' ' + fold(s).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   const fmtNum = (n) => Number(n).toLocaleString('en-GB');
   const fmtCount = (n, word) => `${fmtNum(n)} ${word}${n === 1 ? '' : 's'}`;
   const fmtDay = (ts) => new Date(ts).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const fmtClock = (ts) => new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const fmtWhen = (ts) => `${fmtDay(ts)}, ${fmtClock(ts)}`;
+  const fmtDate = (ts) => new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const fmtHours = (ms) => (ms >= 100 * 3600e3 ? `${fmtNum(Math.round(ms / 3600e3))} h` : fmtDur(ms));
   const pickImg = (images, target) => {
     if (!images || !images.length) return '';
     const sized = images.filter((i) => i && (i.width || i.height));
@@ -900,7 +954,10 @@ input[type="range"].slider:disabled { cursor: default; }
     viewToken: 0,
     tracks: [],
     next: null,
+    total: null,
     loading: false,
+    loadingAll: null,
+    filter: '',
     saved: new Map(),
     playlists: [],
     player: null,
@@ -927,15 +984,18 @@ input[type="range"].slider:disabled { cursor: default; }
     lyricsUserAt: 0
   };
   const lyricsCache = new Map();
+  const listCache = new Map(); // whole Liked Songs / playlist lists, kept for 10 minutes
 
   function normTrack(t) {
-    if (!t) return { uri: null, name: 'Unavailable', artists: '', album: '', art: '', duration: 0, playable: false };
+    if (!t) return { uri: null, name: 'Unavailable', artists: '', key: ' unavailable', album: '', art: '', duration: 0, playable: false };
     const images = (t.album && t.album.images) || t.images || [];
     const artists = (t.artists || []).map((a) => a.name).filter(Boolean).join(', ') || (t.show && t.show.name) || '';
+    const name = t.name || 'Untitled';
     return {
       uri: t.uri || null,
-      name: t.name || 'Untitled',
+      name,
       artists,
+      key: searchKey(name + ' ' + artists),
       album: (t.album && t.album.name) || (t.show && t.show.name) || '',
       art: pickImg(images, 64),
       duration: t.duration_ms || 0,
@@ -1032,6 +1092,12 @@ input[type="range"].slider:disabled { cursor: default; }
     $('list').hidden = t === 'home' || t === 'lyrics';
     $('search-wrap').hidden = t !== 'search';
     $('play-all').hidden = t === 'search' || t === 'home' || t === 'lyrics';
+    state.filter = '';
+    state.total = null;
+    $('filter').value = '';
+    $('filter-count').textContent = '';
+    $('filter-wrap').hidden = !(t === 'liked' || t === 'playlist');
+    $('filter').placeholder = t === 'liked' ? 'Find a song or artist in Liked Songs' : 'Find a song or artist in this playlist';
 
     if (t === 'home') {
       setHeadTile('', VIEW_ICON.home);
@@ -1058,8 +1124,23 @@ input[type="range"].slider:disabled { cursor: default; }
       if (opts.focus) { $('search').value = view.q || ''; $('search').focus(); }
       if (!view.q) { setEmpty('Search for a song or an artist.'); return; }
     }
+    const cached = listCache.get(cacheKey(view));
+    if (cached && Date.now() - cached.at < LIST_CACHE_MS) {
+      // Already have the whole list from earlier: show it straight away.
+      state.tracks = cached.tracks.slice();
+      state.total = cached.total;
+      setListSub(cached.total);
+      renderList();
+      return;
+    }
     loadPage(state.viewToken, firstRequest(view));
   }
+  function setListSub(total) {
+    if (total == null) return;
+    if (state.view.type === 'liked') $('view-sub').textContent = fmtCount(total, 'song');
+    if (state.view.type === 'playlist') $('view-sub').textContent = [state.view.owner, fmtCount(total, 'song')].filter(Boolean).join(' · ');
+  }
+  const cacheKey = (v) => (v.type === 'playlist' ? 'pl:' + v.id : v.type);
 
   async function loadPage(token, req) {
     if (!req) return;
@@ -1072,17 +1153,19 @@ input[type="range"].slider:disabled { cursor: default; }
       const start = state.tracks.length;
       state.tracks.push(...page.items);
       state.next = page.next;
-      renderRows(start);
-      if (start === 0 && page.total != null) {
-        if (state.view.type === 'liked') $('view-sub').textContent = fmtCount(page.total, 'song');
-        if (state.view.type === 'playlist') $('view-sub').textContent = [state.view.owner, fmtCount(page.total, 'song')].filter(Boolean).join(' · ');
-      }
+      if (page.total != null) state.total = page.total;
+      if (!state.filter) appendRows(seq(start, state.tracks.length));
+      if (start === 0) setListSub(page.total);
       if (!state.tracks.length) setEmpty(VIEW_TEXT[state.view.type].empty);
+      if (!state.next && (state.view.type === 'liked' || state.view.type === 'playlist')) {
+        listCache.set(cacheKey(state.view), { at: Date.now(), tracks: state.tracks.slice(), total: state.total });
+      }
       checkSaved(page.items, state.view.type === 'liked');
     } catch (e) {
       if (token !== state.viewToken) return;
       if (e.auth) return handleError(e);
       if (state.view.type === 'playlist' && e.status === 403 && state.tracks.length === 0) {
+        $('filter-wrap').hidden = true;
         setEmpty('Spotify only lets Pane list the songs in playlists you own or collaborate on. Press play to listen to this one.');
       } else if (state.tracks.length === 0) {
         setEmpty(e.message);
@@ -1098,14 +1181,106 @@ input[type="range"].slider:disabled { cursor: default; }
     }
   }
   function maybeLoadMore() {
-    if (!state.next || state.loading) return;
+    if (!state.next || state.loading || state.loadingAll || state.filter) return;
     const s = $('scroller');
     if (s.scrollTop + s.clientHeight >= s.scrollHeight - 700) loadPage(state.viewToken, state.next);
   }
 
-  function renderRows(start) {
+  // ---------- finding songs inside a list ----------
+  const seq = (a, b) => Array.from({ length: Math.max(0, b - a) }, (_, k) => a + k);
+  function visibleIndices() {
+    if (!state.filter) return seq(0, state.tracks.length);
+    const words = state.filter.split(' ').filter(Boolean).map((w) => ' ' + w);
+    const out = [];
+    for (let i = 0; i < state.tracks.length; i++) {
+      const key = state.tracks[i].key;
+      if (words.every((w) => key.includes(w))) out.push(i);
+    }
+    return out;
+  }
+  function renderList() {
+    $('list').replaceChildren();
+    const idx = visibleIndices();
+    appendRows(idx);
+    if (state.filter) {
+      $('filter-count').textContent = `${fmtNum(idx.length)} of ${fmtNum(state.tracks.length)}`;
+      setEmpty(idx.length ? '' : `Nothing here matches “${$('filter').value.trim()}”.`);
+    } else {
+      $('filter-count').textContent = '';
+      setEmpty(state.tracks.length ? '' : VIEW_TEXT[state.view.type].empty);
+    }
+  }
+  // Fetch the rest of the list (four pages at a time) so a search covers every song, not just the ones scrolled to.
+  function loadAll(token) {
+    if (!state.next) return Promise.resolve();
+    if (state.loadingAll) return state.loadingAll;
+    const v = state.view;
+    const showProgress = (have) => {
+      $('loading').hidden = false;
+      $('loading').textContent = state.total ? `Loading the full list to search… ${fmtNum(have)} of ${fmtNum(state.total)}` : 'Loading the full list to search…';
+    };
+    state.loadingAll = (async () => {
+      while (state.loading) await new Promise((r) => setTimeout(r, 50));
+      if (token !== state.viewToken || !state.next) return;
+      const start = state.tracks.length;
+      showProgress(start);
+      if (state.total == null) {
+        while (state.next && token === state.viewToken) {
+          const page = parsePage(v, await api(state.next));
+          state.tracks.push(...page.items);
+          state.next = page.next;
+          showProgress(state.tracks.length);
+        }
+      } else {
+        const [path, query] = firstRequest(v);
+        const offsets = [];
+        for (let o = start; o < state.total; o += 50) offsets.push(o);
+        const pages = new Array(offsets.length);
+        let k = 0, have = start;
+        const worker = async () => {
+          while (k < offsets.length && token === state.viewToken) {
+            const n = k++;
+            const page = parsePage(v, await api(path, { query: Object.assign({}, query, { offset: offsets[n] }) }));
+            pages[n] = page.items;
+            have += page.items.length;
+            showProgress(have);
+          }
+        };
+        await Promise.all([worker(), worker(), worker(), worker()]);
+        if (token !== state.viewToken) return;
+        for (const p of pages) if (p) state.tracks.push(...p);
+        state.next = null;
+      }
+      if (token !== state.viewToken) return;
+      listCache.set(cacheKey(v), { at: Date.now(), tracks: state.tracks.slice(), total: state.total });
+      checkSaved(state.tracks.slice(start), v.type === 'liked');
+    })().finally(() => {
+      state.loadingAll = null;
+      $('loading').hidden = true;
+      $('loading').textContent = 'Loading…';
+    });
+    return state.loadingAll;
+  }
+  async function applyFilter() {
+    const token = state.viewToken;
+    state.filter = searchKey($('filter').value).trim();
+    if (state.filter && state.next) {
+      try {
+        await loadAll(token);
+      } catch (e) {
+        if (e.auth) { handleError(e); return; }
+        toast(`Couldn't load the whole list, so this only searches the songs loaded so far. ${e.message}`);
+      }
+      if (token !== state.viewToken) return;
+      state.filter = searchKey($('filter').value).trim();
+    }
+    renderList();
+    $('scroller').scrollTop = 0;
+  }
+
+  function appendRows(indices) {
     const frag = document.createDocumentFragment();
-    for (let i = start; i < state.tracks.length; i++) {
+    for (const i of indices) {
       const t = state.tracks[i];
       const li = el('li', 'row');
       li.dataset.i = i;
@@ -1185,6 +1360,7 @@ input[type="range"].slider:disabled { cursor: default; }
     if (!uri || !SAVEABLE.test(uri)) return;
     const was = state.saved.get(uri) === true;
     setSaved(uri, !was);
+    listCache.delete('liked');
     try {
       await api('/me/library', { method: was ? 'DELETE' : 'PUT', query: { uris: uri } });
       toast(was ? 'Removed from Liked Songs' : 'Saved to Liked Songs');
@@ -1267,9 +1443,18 @@ input[type="range"].slider:disabled { cursor: default; }
       const h = getHistory();
       const last = h.length ? h[h.length - 1][0] : 0;
       const d = await api('/me/player/recently-played', { query: { limit: 50 } });
+      const items = (d && d.items) || [];
+      // If all 50 plays Spotify returned are newer than anything Pane already had,
+      // there were probably more plays in between that Pane never saw. Remember that stretch.
+      const times = items.map((it) => it && Date.parse(it.played_at)).filter(Boolean);
+      if (h.length && items.length >= 50 && times.length && Math.min(...times) > last) {
+        const gaps = (store.get('historyGaps') || []).filter((g) => Array.isArray(g) && g[1] > Date.now() - 60 * DAY);
+        gaps.push([last, Math.min(...times)]);
+        store.set('historyGaps', gaps.slice(-50));
+      }
       const seen = new Set(h.slice(-120).map((e) => e[0] + '|' + e[1]));
       const add = [];
-      for (const it of (d && d.items) || []) {
+      for (const it of items) {
         const t = it && it.track;
         const ts = it && Date.parse(it.played_at);
         if (!t || !t.uri || !ts || ts <= last) continue;
@@ -1282,13 +1467,170 @@ input[type="range"].slider:disabled { cursor: default; }
       if (add.length) {
         add.sort((a, b) => a[0] - b[0]);
         h.push(...add);
-        if (h.length > HISTORY_CAP) h.splice(0, h.length - HISTORY_CAP);
+        trimHistory(h);
         store.set('history', h);
       }
       state.historySyncedAt = Date.now();
       return add.length;
     })().finally(() => { state.historySyncing = null; });
     return state.historySyncing;
+  }
+  // Individual plays are kept for 60 days (the charts need 30). Older ones are
+  // folded into per-day totals so the long-term figures keep them.
+  function trimHistory(h) {
+    const cutoff = Date.now() - 60 * DAY;
+    let drop = 0;
+    while (drop < h.length && (h[drop][0] < cutoff || h.length - drop > HISTORY_CAP)) drop++;
+    if (!drop) return;
+    const cd = getCollectedDaily();
+    for (const e of h.slice(0, drop)) {
+      const k = dayKey(new Date(e[0]));
+      const v = cd[k] || (cd[k] = [0, 0]);
+      v[0] += e[4] || 0;
+      v[1] += 1;
+    }
+    store.set('collectedDaily', cd);
+    h.splice(0, drop);
+  }
+  function getCollectedDaily() {
+    if (!state.collectedDaily) {
+      const cd = store.get('collectedDaily');
+      state.collectedDaily = cd && typeof cd === 'object' ? cd : {};
+    }
+    return state.collectedDaily;
+  }
+
+  // ---------- importing Spotify's own data export ----------
+  // Stored as { range: [firstTs, lastTs], daily: { 'YYYY-MM-DD': [ms, plays] }, recent: [plays in the last 45 days], plays }
+  function getImport() {
+    if (state.imp === undefined) {
+      const imp = store.get('import');
+      state.imp = imp && Array.isArray(imp.range) && imp.daily ? imp : null;
+    }
+    return state.imp;
+  }
+  const inImport = (ts) => { const imp = getImport(); return !!imp && ts >= imp.range[0] && ts <= imp.range[1]; };
+
+  // A minimal reader for the .zip Spotify emails, using the browser's own decompression.
+  async function unzipJson(file) {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    let end = -1;
+    for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { end = i; break; }
+    }
+    if (end < 0) throw new Error(`${file.name} isn’t a zip file Pane can read.`);
+    const count = dv.getUint16(end + 10, true);
+    let p = dv.getUint32(end + 16, true);
+    const out = [];
+    for (let n = 0; n < count && p + 46 <= buf.length; n++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true);
+      const size = dv.getUint32(p + 20, true);
+      const nameLen = dv.getUint16(p + 28, true), extraLen = dv.getUint16(p + 30, true), commentLen = dv.getUint16(p + 32, true);
+      const local = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nameLen));
+      p += 46 + nameLen + extraLen + commentLen;
+      if (!/\.json$/i.test(name) || !/stream/i.test(name)) continue;
+      const start = local + 30 + dv.getUint16(local + 26, true) + dv.getUint16(local + 28, true);
+      const data = buf.subarray(start, start + size);
+      let text;
+      if (method === 0) {
+        text = new TextDecoder().decode(data);
+      } else if (method === 8) {
+        if (typeof DecompressionStream === 'undefined') throw new Error('This browser can’t open zip files. Unzip it and choose the .json files inside instead.');
+        text = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+      } else {
+        continue;
+      }
+      out.push({ name, text });
+    }
+    return out;
+  }
+  function fromExtended(r) {
+    const name = r && r.master_metadata_track_name;
+    const artist = r && r.master_metadata_album_artist_name;
+    if (!name || !artist) return null; // podcasts, audiobooks, video
+    let ts = Date.parse(r.ts);
+    if (!ts) return null;
+    // Offline plays are logged when the device next connects; use when they were actually played.
+    if (r.offline === true && typeof r.offline_timestamp === 'number' && r.offline_timestamp > 100) {
+      const ot = r.offline_timestamp > 2e9 ? r.offline_timestamp : r.offline_timestamp * 1000;
+      if (ot <= ts && ts - ot < 30 * DAY) ts = ot;
+    }
+    return [ts, r.spotify_track_uri || '', String(name), String(artist), Math.max(0, Number(r.ms_played) || 0), String(artist), 'i'];
+  }
+  function fromAccount(r) {
+    if (!r || !r.trackName || !r.artistName) return null; // podcast files use other fields
+    const s = String(r.endTime || '').trim();
+    const ts = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(s) ? Date.parse(s.replace(' ', 'T') + (s.length === 16 ? ':00' : '') + 'Z') : Date.parse(s);
+    if (!ts) return null;
+    return [ts, '', String(r.trackName), String(r.artistName), Math.max(0, Number(r.msPlayed) || 0), String(r.artistName), 'i'];
+  }
+  async function importFiles(files) {
+    const status = $('import-status');
+    const say = (t) => { status.textContent = t; };
+    const pause = () => new Promise((r) => setTimeout(r, 0));
+    say('Reading your files…');
+    await pause();
+    const docs = [];
+    for (const f of files) {
+      if (/\.zip$/i.test(f.name) || /zip/.test(f.type)) docs.push(...await unzipJson(f));
+      else if (/\.json$/i.test(f.name)) docs.push({ name: f.name, text: await f.text() });
+    }
+    const extended = [], account = [];
+    for (const [k, d] of docs.entries()) {
+      say(`Reading ${fmtNum(k + 1)} of ${fmtNum(docs.length)} files…`);
+      await pause();
+      let arr;
+      try { arr = JSON.parse(d.text); } catch { continue; }
+      if (!Array.isArray(arr) || !arr.length || !arr[0] || typeof arr[0] !== 'object') continue;
+      if ('ms_played' in arr[0] && 'ts' in arr[0]) { for (const r of arr) { const e = fromExtended(r); if (e) extended.push(e); } }
+      else if ('msPlayed' in arr[0] && 'endTime' in arr[0]) { for (const r of arr) { const e = fromAccount(r); if (e) account.push(e); } }
+    }
+    // If both kinds were chosen, the full history already contains the one-year file.
+    const plays = extended.length ? extended : account;
+    if (!plays.length) throw new Error('Those files don’t contain any music history. Choose the .zip Spotify emailed you, or the StreamingHistory .json files inside it.');
+    plays.sort((a, b) => a[0] - b[0]);
+    const seen = new Set();
+    const uniq = [];
+    for (const e of plays) {
+      const key = e[0] + '|' + e[2] + '|' + e[3];
+      if (!seen.has(key)) { seen.add(key); uniq.push(e); }
+    }
+    let range = [uniq[0][0], uniq[uniq.length - 1][0]];
+    const daily = {};
+    for (const e of uniq) {
+      const k = dayKey(new Date(e[0]));
+      const v = daily[k] || (daily[k] = [0, 0]);
+      v[0] += e[4];
+      if (e[4] >= 30000) v[1] += 1; // Spotify counts a play after 30 seconds
+    }
+    const recentFrom = Date.now() - 45 * DAY;
+    let recent = uniq.filter((e) => e[0] >= recentFrom);
+    // Keep anything from an earlier import that this one doesn't cover.
+    const prev = getImport();
+    if (prev) {
+      const s = dayKey(new Date(range[0])), t = dayKey(new Date(range[1]));
+      for (const [k, v] of Object.entries(prev.daily)) if (k < s || k > t) daily[k] = v;
+      recent = recent.concat((prev.recent || []).filter((e) => e[0] >= recentFrom && (e[0] < range[0] || e[0] > range[1]))).sort((a, b) => a[0] - b[0]);
+      range = [Math.min(range[0], prev.range[0]), Math.max(range[1], prev.range[1])];
+    }
+    const total = Object.values(daily).reduce((n, v) => n + v[1], 0);
+    const imp = { range, daily, recent, plays: total, at: Date.now() };
+    try {
+      localStorage.setItem('pane.import', JSON.stringify(imp));
+    } catch {
+      throw new Error('Your browser ran out of room to save the history. Clearing this site’s data in your browser settings frees it up.');
+    }
+    state.imp = imp;
+    // Daily totals Pane collected itself for days the import now covers are replaced by Spotify's figures.
+    const cd = getCollectedDaily();
+    const s = dayKey(new Date(range[0])), t = dayKey(new Date(range[1]));
+    for (const k of Object.keys(cd)) if (k >= s && k <= t) delete cd[k];
+    store.set('collectedDaily', cd);
+    say('');
+    toast(`Imported ${fmtCount(uniq.filter((e) => e[4] >= 30000).length, 'play')} from ${fmtDate(range[0])} to ${fmtDate(range[1])}`);
   }
 
   // ---------- home ----------
@@ -1301,17 +1643,52 @@ input[type="range"].slider:disabled { cursor: default; }
         .catch((e) => { if (e.auth) handleError(e); else console.warn('Could not update history:', e.message); });
     }
   }
-  function dayKey(d) { return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+  function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function deltaText(cur, prev, fmt) {
     const diff = cur - prev;
     if (diff === 0) return 'Same as the 7 days before';
     return `${diff > 0 ? '↑' : '↓'} ${fmt(Math.abs(diff))} on the 7 days before`;
   }
+  // Plays to count from a point in time: Spotify's export where it covers that moment,
+  // otherwise what Pane collected. Each entry: [ts, uri, name, artists, ms, firstArtist, 'i' if imported].
+  function playsSince(from) {
+    const out = [];
+    const imp = getImport();
+    if (imp) for (const e of imp.recent || []) if (e[0] >= from) out.push(e);
+    for (const e of getHistory()) if (e[0] >= from && !inImport(e[0])) out.push(e);
+    return out;
+  }
+  const counts = (e) => e[6] !== 'i' || e[4] >= 30000;
+  function coverageStart() {
+    const imp = getImport(), h = getHistory();
+    const starts = [];
+    if (imp) starts.push(imp.range[0]);
+    if (h.length) starts.push(h[0][0]);
+    const cd = Object.keys(getCollectedDaily()).sort()[0];
+    if (cd) { const [y, m, d] = cd.split('-').map(Number); starts.push(new Date(y, m - 1, d).getTime()); }
+    return starts.length ? Math.min(...starts) : null;
+  }
+  // Stretches with missing plays, ignoring any the import has since filled in.
+  function missingStretches(since) {
+    const imp = getImport();
+    const out = [];
+    for (const g of store.get('historyGaps') || []) {
+      if (!Array.isArray(g) || g[1] <= since) continue;
+      let [a, b] = g;
+      if (imp) {
+        if (a >= imp.range[0] && b <= imp.range[1]) continue;
+        if (a < imp.range[1] && b > imp.range[1]) a = imp.range[1];
+        if (a < imp.range[0] && b > imp.range[0]) b = imp.range[0];
+      }
+      out.push([a, b]);
+    }
+    return out;
+  }
   function renderHomeHistory() {
-    const h = getHistory();
     const now = Date.now();
-    const first = h.length ? h[0][0] : null;
-    const w1 = now - 7 * DAY, w2 = now - 14 * DAY;
+    const imp = getImport();
+    const first = coverageStart();
+    const w1 = now - 7 * DAY, w2 = now - 14 * DAY, h30 = now - 30 * DAY;
     const cur = { ms: 0, plays: 0, artists: new Set() };
     const prev = { ms: 0, plays: 0, artists: new Set() };
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -1323,11 +1700,15 @@ input[type="range"].slider:disabled { cursor: default; }
       days.push({ date: d, ms: 0 });
     }
     const hours = new Array(24).fill(0);
-    const h30 = now - 30 * DAY;
-    for (const e of h) {
+    let usesLengths = false;
+    for (const e of playsSince(Math.min(w2, h30))) {
       const ts = e[0], ms = e[4] || 0, artist = e[5] || e[3];
-      if (ts >= w1) { cur.ms += ms; cur.plays++; if (artist) cur.artists.add(artist); }
-      else if (ts >= w2) { prev.ms += ms; prev.plays++; if (artist) prev.artists.add(artist); }
+      if (ts >= w1 && e[6] !== 'i') usesLengths = true;
+      const bucket = ts >= w1 ? cur : ts >= w2 ? prev : null;
+      if (bucket) {
+        bucket.ms += ms;
+        if (counts(e)) { bucket.plays++; if (artist) bucket.artists.add(artist); }
+      }
       if (ts >= h30) {
         const d = new Date(ts);
         hours[d.getHours()] += ms;
@@ -1336,10 +1717,24 @@ input[type="range"].slider:disabled { cursor: default; }
       }
     }
 
-    $('h-note').textContent = first
-      ? `From ${fmtCount(h.length, 'play')} Pane has collected since ${fmtDay(first)}. Times use song lengths.`
-      : 'Pane collects your plays from Spotify each time it opens.';
-    const hasPrev = first !== null && first <= w2;
+    // Only claim what the history actually covers.
+    const gaps = missingStretches(w2);
+    const gapsIn = (a, b) => gaps.filter((g) => g[0] < b && g[1] > a);
+    const fullWeek = first !== null && first <= w1;
+    const weekGaps = gapsIn(w1, now);
+    $('h-week').textContent = first && !fullWeek ? `Since ${fmtDay(first)}` : 'Last 7 days';
+    const notes = [];
+    if (!first) {
+      notes.push('Pane collects your plays from Spotify each time it opens.');
+    } else {
+      if (!fullWeek) notes.push(`Spotify only shares your last 50 plays, so Pane’s history starts at ${fmtWhen(first)}. It covers a full week from ${fmtDay(first + 7 * DAY)}.`);
+      if (weekGaps.length === 1) notes.push(`Plays between ${fmtWhen(weekGaps[0][0])} and ${fmtWhen(weekGaps[0][1])} are missing because Pane wasn’t open, so the real figures are higher.`);
+      else if (weekGaps.length > 1) notes.push(`Plays from ${weekGaps.length} stretches when Pane wasn’t open are missing, so the real figures are higher.`);
+      if (imp && imp.range[1] >= w1) notes.push(`Uses your Spotify data up to ${fmtWhen(imp.range[1])}${usesLengths ? ', then plays Pane collected, timed by song length' : ''}.`);
+      else if (usesLengths) notes.push('Times use song lengths.');
+    }
+    $('h-note').textContent = notes.join(' ');
+    const hasPrev = first !== null && first <= w2 && gapsIn(w2, now).length === 0;
     $('s-time').textContent = first ? fmtDur(cur.ms) : '—';
     $('s-plays').textContent = first ? fmtNum(cur.plays) : '—';
     $('s-artists').textContent = first ? fmtNum(cur.artists.size) : '—';
@@ -1356,8 +1751,12 @@ input[type="range"].slider:disabled { cursor: default; }
     days.forEach((d, i) => {
       const isToday = i === days.length - 1;
       const noData = !firstDay || d.date < firstDay;
-      const bar = el('div', 'bar' + (isToday ? ' hi' : '') + (noData ? ' nodata' : ''));
-      bar.title = `${fmtDay(d.date)}: ${noData ? 'no history yet' : fmtDur(d.ms)}`;
+      const dayEnd = new Date(d.date); dayEnd.setDate(dayEnd.getDate() + 1);
+      const startsMidDay = !noData && d.date.getTime() === firstDay.getTime();
+      const missing = !noData && gapsIn(d.date.getTime(), dayEnd.getTime()).length > 0;
+      const bar = el('div', 'bar' + (isToday ? ' hi' : '') + (noData ? ' nodata' : '') + (startsMidDay || missing ? ' partial' : ''));
+      bar.title = `${fmtDay(d.date)}: ${noData ? 'no history yet'
+        : fmtDur(d.ms) + (startsMidDay ? ` (history starts at ${fmtClock(first)})` : missing ? ' (some plays missing)' : '')}`;
       const fill = el('i');
       fill.style.setProperty('--h', (d.ms / maxDay * 100).toFixed(1) + '%');
       bar.appendChild(fill);
@@ -1381,6 +1780,81 @@ input[type="range"].slider:disabled { cursor: default; }
       hourBars.appendChild(bar);
     });
     $('c-hours').replaceChildren(hourBars);
+    $('c-hours-range').textContent = first && first > h30 ? `since ${fmtDay(first)}` : 'last 30 days';
+
+    renderOverTime(first);
+    renderImportCard();
+  }
+
+  // Per-day totals across everything Pane knows: the import where it covers a day, otherwise collected plays.
+  function allDaily() {
+    const out = new Map();
+    const add = (k, ms, n) => { const v = out.get(k) || [0, 0]; v[0] += ms; v[1] += n; out.set(k, v); };
+    const imp = getImport();
+    let s = null, t = null;
+    if (imp) {
+      for (const [k, v] of Object.entries(imp.daily)) add(k, v[0], v[1]);
+      s = dayKey(new Date(imp.range[0])); t = dayKey(new Date(imp.range[1]));
+    }
+    for (const [k, v] of Object.entries(getCollectedDaily())) if (!imp || k < s || k > t) add(k, v[0], v[1]);
+    for (const e of getHistory()) if (!inImport(e[0])) add(dayKey(new Date(e[0])), e[4] || 0, 1);
+    return out;
+  }
+  function renderOverTime(first) {
+    const imp = getImport();
+    // Only worth showing once there's more than a couple of months to look at.
+    const show = !!first && (!!imp || Date.now() - first > 60 * DAY);
+    $('time-wrap').hidden = !show;
+    if (!show) return;
+    const daily = allDaily();
+    let ms = 0, plays = 0;
+    const months = new Map();
+    for (const [k, v] of daily) {
+      ms += v[0]; plays += v[1];
+      const m = k.slice(0, 7);
+      months.set(m, (months.get(m) || 0) + v[0]);
+    }
+    const daysCovered = Math.max(1, Math.round((Date.now() - first) / DAY));
+    $('t-total').textContent = fmtHours(ms);
+    $('t-plays').textContent = fmtNum(plays);
+    $('t-avg').textContent = fmtDur(ms / daysCovered);
+    $('time-note').textContent = `Since ${fmtDate(first)}${imp ? ', from your Spotify data plus plays Pane collected' : ''}.`;
+
+    const now = new Date();
+    const list = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      list.push({ d, key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') });
+    }
+    const firstMonth = new Date(first); firstMonth.setDate(1); firstMonth.setHours(0, 0, 0, 0);
+    const max = Math.max(1, ...list.map((m) => months.get(m.key) || 0));
+    const bars = document.createDocumentFragment();
+    const axis = document.createDocumentFragment();
+    list.forEach((m, i) => {
+      const val = months.get(m.key) || 0;
+      const isNow = i === list.length - 1;
+      const noData = m.d < firstMonth;
+      const partial = !noData && (m.d.getTime() === firstMonth.getTime() || isNow);
+      const bar = el('div', 'bar' + (isNow ? ' hi' : '') + (noData ? ' nodata' : '') + (partial ? ' partial' : ''));
+      const label = m.d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      bar.title = `${label}: ${noData ? 'no history' : fmtHours(val) + (isNow ? ' so far' : partial ? ' (history starts mid-month)' : '')}`;
+      const fill = el('i');
+      fill.style.setProperty('--h', (val / max * 100).toFixed(1) + '%');
+      bar.appendChild(fill);
+      bars.appendChild(bar);
+      axis.appendChild(el('span', isNow ? 'hi' : '', m.d.toLocaleDateString('en-GB', { month: 'narrow' })));
+    });
+    $('c-months').replaceChildren(bars);
+    $('c-months-axis').replaceChildren(axis);
+  }
+  function renderImportCard() {
+    const imp = getImport();
+    $('import-steps').hidden = !!imp;
+    $('import-title').textContent = imp ? 'Your Spotify data is imported' : 'Get your complete listening history';
+    $('import-desc').textContent = imp
+      ? `${fmtCount(imp.plays, 'play')} from ${fmtDate(imp.range[0])} to ${fmtDate(imp.range[1])}. Pane adds new plays from there. Import a newer download any time to refresh it.`
+      : 'Spotify only shares your last 50 plays with apps like Pane. For your real totals, ask Spotify for your data and import the file it emails you. It stays in this browser.';
+    $('import-btn').textContent = imp ? 'Import newer data' : 'Choose file';
   }
 
   function slimArtist(a) {
@@ -1746,8 +2220,11 @@ input[type="range"].slider:disabled { cursor: default; }
     const v = state.view;
     const t = state.tracks[i];
     if (!t || !t.playable) return Promise.resolve();
+    // A playlist plays on from the chosen song in the playlist's own order, even mid-search.
     if (v.type === 'playlist') return startPlayback({ context_uri: v.uri, offset: { position: i } });
-    const uris = state.tracks.slice(i).filter((x) => x.playable).map((x) => x.uri).slice(0, 100);
+    // Other lists play the songs shown, from the chosen one down.
+    const order = visibleIndices();
+    const uris = order.slice(Math.max(0, order.indexOf(i))).map((j) => state.tracks[j]).filter((x) => x.playable).map((x) => x.uri).slice(0, 100);
     return startPlayback({ uris });
   }
   function playCollection() {
@@ -2192,6 +2669,15 @@ input[type="range"].slider:disabled { cursor: default; }
       searchTimer = setTimeout(() => openView({ type: 'search', q: $('search').value.trim() }), 350);
     });
 
+    let filterTimer = null;
+    $('filter').addEventListener('input', () => {
+      clearTimeout(filterTimer);
+      filterTimer = setTimeout(applyFilter, 150);
+    });
+    $('filter').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && $('filter').value) { e.stopPropagation(); $('filter').value = ''; applyFilter(); }
+    });
+
     $('list').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn || btn.disabled) return;
@@ -2235,6 +2721,24 @@ input[type="range"].slider:disabled { cursor: default; }
       });
     }
     $('reconnect').addEventListener('click', () => { login().catch(handleError); });
+
+    $('import-btn').addEventListener('click', () => $('import-file').click());
+    $('import-file').addEventListener('change', async () => {
+      const files = [...$('import-file').files];
+      $('import-file').value = '';
+      if (!files.length) return;
+      $('import-btn').disabled = true;
+      $('import-status').textContent = '';
+      try {
+        await importFiles(files);
+        renderHomeHistory();
+      } catch (e) {
+        console.error(e);
+        $('import-status').textContent = e && e.message ? e.message : 'Couldn’t read those files.';
+      } finally {
+        $('import-btn').disabled = false;
+      }
+    });
 
     $('play-all').addEventListener('click', () => { activateIfHere(); playCollection().catch(handleError); });
 
@@ -2344,9 +2848,10 @@ input[type="range"].slider:disabled { cursor: default; }
       if (state.view && state.view.type === 'lyrics') startLyricsSync();
     });
 
-    // Keep the play history topped up while Pane stays open (one small request every 20 minutes at most).
+    // Keep the play history topped up while Pane is open, even in a background tab
+    // (one small request every 20 minutes, well inside the 50 plays Spotify keeps).
     setInterval(() => {
-      if (document.hidden || $('app').hidden || Date.now() - state.historySyncedAt < 20 * 60e3) return;
+      if ($('app').hidden || Date.now() - state.historySyncedAt < 20 * 60e3) return;
       syncHistory()
         .then((n) => { if (n && state.view && state.view.type === 'home') renderHomeHistory(); })
         .catch(() => {});
