@@ -16,7 +16,7 @@
   --fg: #1c2026;
   --muted: rgba(28, 32, 38, .6);
   --faint: rgba(28, 32, 38, .36);
-  --glass: rgba(255, 255, 255, .5);
+  --glass: rgba(255, 255, 255, .44);
   --glass-hi: rgba(255, 255, 255, .7);
   --glass-solid: #f3f4f6;
   --sheen: rgba(255, 255, 255, .42);
@@ -25,12 +25,13 @@
   --rim: rgba(28, 32, 38, .08);
   --hover: rgba(255, 255, 255, .5);
   --shadow: rgba(30, 36, 44, .09);
-  --accent: #4b6176;
-  --accent-fg: #ffffff;
-  --love: #a9505f;
-  --bar: rgba(28, 32, 38, .15);
-  --tint-mix: 30%;
-  --tint-mix-2: 20%;
+  /* The accent follows the cover of what's playing (set from script); these are the resting colours. */
+  --accent: var(--accent-l, #3c6a8e);
+  --accent-fg: var(--accent-fg-l, #ffffff);
+  --love: #b8455d;
+  --bar: color-mix(in srgb, var(--accent) 26%, transparent);
+  --tint-mix: 46%;
+  --tint-mix-2: 34%;
 
   --radius: 24px;
   --radius-md: 16px;
@@ -43,7 +44,7 @@
     --fg: #e7e9ec;
     --muted: rgba(231, 233, 236, .6);
     --faint: rgba(231, 233, 236, .34);
-    --glass: rgba(36, 40, 46, .52);
+    --glass: rgba(36, 40, 46, .46);
     --glass-hi: rgba(255, 255, 255, .08);
     --glass-solid: #1d2126;
     --sheen: rgba(255, 255, 255, .045);
@@ -52,12 +53,12 @@
     --rim: rgba(255, 255, 255, .07);
     --hover: rgba(255, 255, 255, .06);
     --shadow: rgba(0, 0, 0, .28);
-    --accent: #a2b4c6;
-    --accent-fg: #12161b;
-    --love: #d38e9b;
-    --bar: rgba(231, 233, 236, .17);
-    --tint-mix: 24%;
-    --tint-mix-2: 16%;
+    --accent: var(--accent-d, #8fb7d8);
+    --accent-fg: var(--accent-fg-d, #10161c);
+    --love: #e58c9e;
+    --bar: color-mix(in srgb, var(--accent) 30%, transparent);
+    --tint-mix: 36%;
+    --tint-mix-2: 26%;
     color-scheme: dark;
   }
 }
@@ -67,7 +68,7 @@
   --fg: #e7e9ec;
   --muted: rgba(231, 233, 236, .6);
   --faint: rgba(231, 233, 236, .34);
-  --glass: rgba(36, 40, 46, .52);
+  --glass: rgba(36, 40, 46, .46);
   --glass-hi: rgba(255, 255, 255, .08);
   --glass-solid: #1d2126;
   --sheen: rgba(255, 255, 255, .045);
@@ -76,12 +77,12 @@
   --rim: rgba(255, 255, 255, .07);
   --hover: rgba(255, 255, 255, .06);
   --shadow: rgba(0, 0, 0, .28);
-  --accent: #a2b4c6;
-  --accent-fg: #12161b;
-  --love: #d38e9b;
-  --bar: rgba(231, 233, 236, .17);
-  --tint-mix: 24%;
-  --tint-mix-2: 16%;
+  --accent: var(--accent-d, #8fb7d8);
+  --accent-fg: var(--accent-fg-d, #10161c);
+  --love: #e58c9e;
+  --bar: color-mix(in srgb, var(--accent) 30%, transparent);
+  --tint-mix: 36%;
+  --tint-mix-2: 26%;
   color-scheme: dark;
 }
 
@@ -110,8 +111,9 @@ svg.i { width: 20px; height: 20px; flex: none; }
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   opacity: 0; transition: opacity 2.4s ease;
   background:
-    radial-gradient(80% 70% at 8% 0%, color-mix(in srgb, var(--t, transparent) var(--tint-mix), transparent), transparent 75%),
-    radial-gradient(70% 70% at 100% 100%, color-mix(in srgb, var(--t, transparent) var(--tint-mix-2), transparent), transparent 75%);
+    radial-gradient(75% 65% at 4% 0%, color-mix(in srgb, var(--t1, transparent) var(--tint-mix), transparent), transparent 72%),
+    radial-gradient(55% 60% at 100% 6%, color-mix(in srgb, var(--t2, transparent) var(--tint-mix-2), transparent), transparent 70%),
+    radial-gradient(80% 70% at 72% 100%, color-mix(in srgb, var(--t3, transparent) var(--tint-mix), transparent), transparent 72%);
 }
 .amb.on { opacity: 1; }
 body.lite .amb { display: none; }
@@ -239,7 +241,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .head-tile {
   width: 72px; height: 72px; border-radius: var(--radius-md); flex: none;
   display: grid; place-items: center; overflow: hidden;
-  background: var(--glass-hi); color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 14%, var(--glass-hi)); color: var(--accent);
   box-shadow: inset 0 1px 0 var(--edge), 0 2px 8px var(--shadow);
 }
 .head-tile img { width: 100%; height: 100%; object-fit: cover; }
@@ -296,6 +298,9 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .row.is-playing .playing-mark { display: grid; }
 .row.unplayable { opacity: .45; }
 .row.unplayable .row-play { cursor: default; }
+.list-label { padding: 14px 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.list-note { padding: 14px 8px; font-size: 12px; color: var(--faint); }
+.list.in-queue .queue-btn { display: none; }
 .empty { margin: 32px 10px; color: var(--muted); text-align: center; }
 .loading-more { margin: 12px; text-align: center; color: var(--faint); font-size: 13px; }
 
@@ -372,7 +377,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .genre-top span:first-child { font-weight: 600; text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .genre-top span:last-child { color: var(--faint); font-variant-numeric: tabular-nums; }
 .genre-track { height: 6px; border-radius: 3px; background: var(--rim); overflow: hidden; }
-.genre-track i { display: block; height: 100%; width: var(--w, 0%); border-radius: 3px; background: var(--accent); opacity: .7; }
+.genre-track i { display: block; height: 100%; width: var(--w, 0%); border-radius: 3px; background: var(--accent); }
 .rise { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .rise-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; background: var(--glass-hi); padding: 4px 14px 4px 4px; border-radius: 999px; font-weight: 600; font-size: 13px; box-shadow: inset 0 1px 0 var(--edge); }
 .rise-btn:hover { background: var(--hover); }
@@ -437,10 +442,10 @@ input[type="range"].slider {
   -webkit-appearance: none; appearance: none;
   flex: 1; min-width: 0; height: 18px; background: transparent; cursor: pointer; margin: 0;
 }
-input[type="range"].slider::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--fg) var(--p), var(--rim) var(--p)); }
-input[type="range"].slider::-moz-range-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--fg) var(--p), var(--rim) var(--p)); }
-input[type="range"].slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin-top: -4px; border-radius: 50%; background: var(--fg); border: 0; opacity: 0; transition: opacity .15s; }
-input[type="range"].slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--fg); border: 0; opacity: 0; }
+input[type="range"].slider::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--accent) var(--p), var(--rim) var(--p)); }
+input[type="range"].slider::-moz-range-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--accent) var(--p), var(--rim) var(--p)); }
+input[type="range"].slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin-top: -4px; border-radius: 50%; background: var(--accent); border: 0; opacity: 0; transition: opacity .15s; }
+input[type="range"].slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 0; opacity: 0; }
 input[type="range"].slider:hover::-webkit-slider-thumb, input[type="range"].slider:focus-visible::-webkit-slider-thumb { opacity: 1; }
 input[type="range"].slider:hover::-moz-range-thumb, input[type="range"].slider:focus-visible::-moz-range-thumb { opacity: 1; }
 input[type="range"].slider:disabled { cursor: default; }
@@ -535,6 +540,7 @@ input[type="range"].slider:disabled { cursor: default; }
   <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></g></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H5.5A1.5 1.5 0 0 1 4 19z"/></g></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h11"/><path d="M4 11h11"/><path d="M4 16h7"/><path d="M17 13.5v6.5"/><circle cx="15" cy="20" r="2"/><path d="M17 13.5l3.5-1.2"/></g></symbol>
   <symbol id="i-lyrics" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/><path d="M8 8.5h8"/><path d="M8 12h5"/></g></symbol>
   <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5v5a1 1 0 0 0 1 1h3l4.3 3.6a.8.8 0 0 0 1.3-.6V5.5a.8.8 0 0 0-1.3-.6L8 8.5H5a1 1 0 0 0-1 1z" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16.5 9a4.2 4.2 0 0 1 0 6"/><path d="M19 6.5a7.8 7.8 0 0 1 0 11"/></g></symbol>
   <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
@@ -713,6 +719,7 @@ input[type="range"].slider:disabled { cursor: default; }
       </div>
     </div>
     <div class="right">
+      <button class="icon-btn" id="queue-btn" type="button" aria-pressed="false" aria-label="Queue" title="Queue"><svg class="i"><use href="#i-list"/></svg></button>
       <button class="icon-btn" id="lyrics-btn" type="button" aria-pressed="false" aria-label="Lyrics" title="Lyrics"><svg class="i"><use href="#i-lyrics"/></svg></button>
       <div class="device-wrap">
         <button class="device-btn" id="device-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="device-menu" title="Choose where Spotify plays">
@@ -1008,9 +1015,10 @@ input[type="range"].slider:disabled { cursor: default; }
     liked: { title: 'Liked Songs', empty: 'No liked songs yet. Tap the heart on any song to save it here.' },
     recent: { title: 'Recently played', empty: 'Nothing played recently. Songs you play anywhere on Spotify show up here.' },
     search: { title: 'Search', empty: 'No songs matched that search.' },
-    playlist: { title: '', empty: 'This playlist is empty.' }
+    playlist: { title: '', empty: 'This playlist is empty.' },
+    queue: { title: 'Queue', empty: 'Nothing is playing. Start a song and what’s coming up shows here.' }
   };
-  const VIEW_ICON = { home: 'i-home', liked: 'i-heart-fill', recent: 'i-clock', search: 'i-search', lyrics: 'i-lyrics' };
+  const VIEW_ICON = { home: 'i-home', liked: 'i-heart-fill', recent: 'i-clock', search: 'i-search', lyrics: 'i-lyrics', queue: 'i-list' };
 
   function setHeadTile(imageUrl, iconName) {
     const tile = $('head-tile');
@@ -1030,6 +1038,7 @@ input[type="range"].slider:disabled { cursor: default; }
       if (v.type === 'playlist' && b.dataset.id === v.id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     }
     $('lyrics-btn').setAttribute('aria-pressed', v.type === 'lyrics' ? 'true' : 'false');
+    $('queue-btn').setAttribute('aria-pressed', v.type === 'queue' ? 'true' : 'false');
   }
   function greeting() {
     const h = new Date().getHours();
@@ -1073,7 +1082,8 @@ input[type="range"].slider:disabled { cursor: default; }
   }
 
   function openView(view, opts = {}) {
-    if (view.type === 'lyrics' && state.view && state.view.type !== 'lyrics') state.prevView = state.view;
+    const overlay = (type) => type === 'lyrics' || type === 'queue';
+    if (overlay(view.type) && state.view && !overlay(state.view.type)) state.prevView = state.view;
     state.viewToken++;
     state.view = view;
     state.tracks = [];
@@ -1091,7 +1101,7 @@ input[type="range"].slider:disabled { cursor: default; }
     $('lyrics').hidden = t !== 'lyrics';
     $('list').hidden = t === 'home' || t === 'lyrics';
     $('search-wrap').hidden = t !== 'search';
-    $('play-all').hidden = t === 'search' || t === 'home' || t === 'lyrics';
+    $('play-all').hidden = t === 'search' || t === 'home' || t === 'lyrics' || t === 'queue';
     state.filter = '';
     state.total = null;
     $('filter').value = '';
@@ -1109,6 +1119,14 @@ input[type="range"].slider:disabled { cursor: default; }
     if (t === 'lyrics') {
       renderLyricsHead();
       loadLyrics();
+      return;
+    }
+    $('list').classList.toggle('in-queue', t === 'queue');
+    if (t === 'queue') {
+      setHeadTile('', VIEW_ICON.queue);
+      $('view-title').textContent = 'Queue';
+      $('view-sub').textContent = '';
+      loadQueue(state.viewToken);
       return;
     }
 
@@ -2138,9 +2156,56 @@ input[type="range"].slider:disabled { cursor: default; }
       s.scrollTo({ top: Math.max(0, line.offsetTop - s.clientHeight * 0.38), behavior: jump === true ? 'auto' : 'smooth' });
     }
   }
-  function toggleLyrics() {
-    if (state.view && state.view.type === 'lyrics') openView(state.prevView || { type: 'home' });
-    else openView({ type: 'lyrics' });
+  function toggleOverlay(type) {
+    if (state.view && state.view.type === type) openView(state.prevView || { type: 'home' });
+    else openView({ type });
+  }
+
+  // ---------- queue ----------
+  async function loadQueue(token) {
+    $('loading').hidden = false;
+    let d = null;
+    try {
+      d = await api('/me/player/queue');
+    } catch (e) {
+      if (token !== state.viewToken) return;
+      $('loading').hidden = true;
+      if (e.auth) { handleError(e); return; }
+      setEmpty(e.message);
+      return;
+    }
+    if (token !== state.viewToken) return;
+    $('loading').hidden = true;
+    const now = d && d.currently_playing;
+    $('view-sub').textContent = state.pb && state.pb.uri
+      ? (isRemote() ? `Playing on ${state.pb.device.name}` : 'Playing on this browser')
+      : '';
+    if (!now) { $('list').replaceChildren(); setEmpty(VIEW_TEXT.queue.empty); return; }
+    state.tracks = [normTrack(now), ...((d.queue || []).filter(Boolean).map(normTrack))];
+    const list = $('list');
+    list.replaceChildren(el('li', 'list-label', 'Now playing'));
+    appendRows([0]);
+    if (state.tracks.length > 1) {
+      list.appendChild(el('li', 'list-label', 'Next up'));
+      appendRows(seq(1, state.tracks.length));
+      list.appendChild(el('li', 'list-note', 'Tap a song to skip to it. Spotify doesn’t let apps remove or reorder songs in the queue.'));
+    } else {
+      list.appendChild(el('li', 'list-note', 'Nothing queued after this. Add songs with the + button on any song.'));
+    }
+    setEmpty('');
+    checkSaved(state.tracks, false);
+  }
+  async function skipTo(i) {
+    const t = state.tracks[i];
+    if (!t || i < 1 || remoteBlocked()) return;
+    toast(`Skipping to ${t.name}`);
+    try {
+      // Spotify has no "jump to" for the queue, so skip forward one song at a time.
+      for (let k = 0; k < i; k++) await api('/me/player/next', { method: 'POST', query: targetQuery() });
+    } catch (e) {
+      handleError(e);
+    }
+    pollSoon();
   }
 
   // ---------- playback ----------
@@ -2220,6 +2285,7 @@ input[type="range"].slider:disabled { cursor: default; }
     const v = state.view;
     const t = state.tracks[i];
     if (!t || !t.playable) return Promise.resolve();
+    if (v.type === 'queue') return skipTo(i);
     // A playlist plays on from the chosen song in the playlist's own order, even mid-search.
     if (v.type === 'playlist') return startPlayback({ context_uri: v.uri, offset: { position: i } });
     // Other lists play the songs shown, from the chosen one down.
@@ -2231,7 +2297,7 @@ input[type="range"].slider:disabled { cursor: default; }
     const v = state.view;
     if (!v) return Promise.resolve();
     if (v.type === 'playlist') return startPlayback({ context_uri: v.uri });
-    if (v.type === 'home' || v.type === 'lyrics' || v.type === 'search') {
+    if (v.type === 'home' || v.type === 'lyrics' || v.type === 'search' || v.type === 'queue') {
       toast('Pick a song to start.');
       return Promise.resolve();
     }
@@ -2243,6 +2309,7 @@ input[type="range"].slider:disabled { cursor: default; }
     try {
       await api('/me/player/queue', { method: 'POST', query: Object.assign({ uri }, targetQuery()) });
       toast('Added to queue');
+      if (state.view && state.view.type === 'queue') setTimeout(() => loadQueue(state.viewToken), 600);
     } catch (e) {
       if (e.status === 404) toast('Start playing something first, then add songs to the queue.');
       else handleError(e);
@@ -2457,9 +2524,9 @@ input[type="range"].slider:disabled { cursor: default; }
     pollSoon();
   }
 
-  // ---------- backdrop tint ----------
-  // A soft, desaturated wash taken from the cover. It changes by cross-fading
-  // two layers slowly, and skips changes too small to notice.
+  // ---------- colour from the cover ----------
+  // Up to three soft colours from the cover wash the background, cross-fading
+  // slowly; the strongest one also becomes the accent, adjusted to stay readable.
   function rgbToHsl(r, g, b) {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -2473,47 +2540,91 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     return [h * 360, s, l];
   }
-  function applyTint(hsl) {
-    if (document.body.classList.contains('lite')) return;
-    if (hsl && state.tint) {
-      const dh = Math.min(Math.abs(hsl[0] - state.tint[0]), 360 - Math.abs(hsl[0] - state.tint[0]));
-      if (dh < 12 && Math.abs(hsl[1] - state.tint[1]) < .05 && Math.abs(hsl[2] - state.tint[2]) < .06) return;
+  function hslToRgb(h, s, l) {
+    const k = (n) => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [f(0) * 255, f(8) * 255, f(4) * 255];
+  }
+  const luminance = ([r, g, b]) => {
+    const c = (v) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+    return .2126 * c(r) + .7152 * c(g) + .0722 * c(b);
+  };
+  const contrast = (a, b) => { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const hslCss = ([h, s, l]) => `hsl(${h.toFixed(0)} ${(s * 100).toFixed(0)}% ${(l * 100).toFixed(0)}%)`;
+  const rgbCss = ([r, g, b]) => `rgb(${Math.round(r)} ${Math.round(g)} ${Math.round(b)})`;
+  const LIGHT_BG = [236, 238, 241], DARK_BG = [30, 33, 38];
+
+  function paletteFrom(px) {
+    const bins = Array.from({ length: 12 }, () => ({ w: 0, r: 0, g: 0, b: 0 }));
+    for (let i = 0; i < px.length; i += 4) {
+      const [h, s, l] = rgbToHsl(px[i], px[i + 1], px[i + 2]);
+      if (s < .15 || l < .1 || l > .92) continue;
+      const w = s * Math.max(.05, 1 - Math.abs(l - .5) * 1.6);
+      const bin = bins[Math.floor(h / 30) % 12];
+      bin.w += w; bin.r += px[i] * w; bin.g += px[i + 1] * w; bin.b += px[i + 2] * w;
     }
-    if (!hsl && !state.tint) return;
-    state.tint = hsl;
+    const ranked = bins.filter((b) => b.w > 0).sort((a, b) => b.w - a.w);
+    if (!ranked.length || ranked[0].w < 1.5) return null; // a black-and-white or very muted cover
+    const picked = ranked.filter((b) => b.w >= ranked[0].w * .12).slice(0, 3);
+    const colours = picked.map((b) => {
+      const [h, s, l] = rgbToHsl(b.r / b.w, b.g / b.w, b.b / b.w);
+      return [h, Math.min(s, .55), Math.min(.62, Math.max(.42, l))];
+    });
+    while (colours.length < 3) colours.push(colours[colours.length - 1]);
+    return colours;
+  }
+  function accentFor(base, bg, dark) {
+    let [h, s] = base;
+    s = Math.min(.62, Math.max(.28, s));
+    let l = dark ? .7 : .42;
+    for (let i = 0; i < 30 && contrast(hslToRgb(h, s, l), bg) < 4.5; i++) l += dark ? .02 : -.02;
+    return [h, s, l];
+  }
+  function applyColours(colours) {
+    const root = document.documentElement.style;
+    if (!colours) {
+      for (const v of ['--accent-l', '--accent-d', '--accent-fg-l', '--accent-fg-d']) root.removeProperty(v);
+    } else {
+      const al = accentFor(colours[0], LIGHT_BG, false), ad = accentFor(colours[0], DARK_BG, true);
+      const alRgb = hslToRgb(...al), adRgb = hslToRgb(...ad);
+      root.setProperty('--accent-l', rgbCss(alRgb));
+      root.setProperty('--accent-d', rgbCss(adRgb));
+      root.setProperty('--accent-fg-l', contrast(alRgb, [255, 255, 255]) >= 4.5 ? '#ffffff' : '#111418');
+      root.setProperty('--accent-fg-d', contrast(adRgb, [16, 22, 28]) >= 4.5 ? '#10161c' : '#ffffff');
+    }
+    if (document.body.classList.contains('lite')) return;
+    const same = colours && state.tint && colours.every((c, i) => {
+      const t = state.tint[i];
+      const dh = Math.min(Math.abs(c[0] - t[0]), 360 - Math.abs(c[0] - t[0]));
+      return dh < 10 && Math.abs(c[1] - t[1]) < .05 && Math.abs(c[2] - t[2]) < .05;
+    });
+    if (same || (!colours && !state.tint)) return;
+    state.tint = colours;
     const a = $('amb-a'), b = $('amb-b');
     const [show, hide] = state.tintLayer === 0 ? [b, a] : [a, b];
     state.tintLayer = 1 - state.tintLayer;
-    if (hsl) show.style.setProperty('--t', `hsl(${hsl[0].toFixed(0)} ${(hsl[1] * 100).toFixed(0)}% ${(hsl[2] * 100).toFixed(0)}%)`);
-    show.classList.toggle('on', !!hsl);
+    if (colours) colours.forEach((c, i) => show.style.setProperty('--t' + (i + 1), hslCss(c)));
+    show.classList.toggle('on', !!colours);
     hide.classList.remove('on');
   }
   function tintFrom(url) {
-    if (!url || document.body.classList.contains('lite')) { applyTint(null); return; }
+    if (!url) { applyColours(null); return; }
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.decoding = 'async';
     img.onload = () => {
       try {
         const c = document.createElement('canvas');
-        c.width = c.height = 12;
+        c.width = c.height = 24;
         const x = c.getContext('2d', { willReadFrequently: true });
-        x.drawImage(img, 0, 0, 12, 12);
-        const px = x.getImageData(0, 0, 12, 12).data;
-        let r = 0, g = 0, b = 0, w = 0;
-        for (let i = 0; i < px.length; i += 4) {
-          const [, s, l] = rgbToHsl(px[i], px[i + 1], px[i + 2]);
-          const weight = 0.2 + s * (1 - Math.abs(l - .5) * 2);
-          r += px[i] * weight; g += px[i + 1] * weight; b += px[i + 2] * weight; w += weight;
-        }
-        const [h, s, l] = rgbToHsl(r / w, g / w, b / w);
-        // Keep it mellow: low saturation, mid lightness.
-        applyTint([h, Math.min(s, .32) * .85, Math.min(.6, Math.max(.42, l))]);
+        x.drawImage(img, 0, 0, 24, 24);
+        applyColours(paletteFrom(x.getImageData(0, 0, 24, 24).data));
       } catch {
-        applyTint(null);
+        applyColours(null);
       }
     };
-    img.onerror = () => applyTint(null);
+    img.onerror = () => applyColours(null);
     img.src = url;
   }
 
@@ -2554,6 +2665,7 @@ input[type="range"].slider:disabled { cursor: default; }
     markPlayingRows();
     if (pb && pb.uri && SAVEABLE.test(pb.uri) && !state.saved.has(pb.uri)) checkSaved([{ uri: pb.uri, playable: true }], false);
     if (state.view && state.view.type === 'lyrics') { renderLyricsHead(); loadLyrics(); }
+    if (state.view && state.view.type === 'queue') loadQueue(state.viewToken);
   }
   function renderIdle(msg) {
     if (msg) state.idleMsg = msg;
@@ -2710,7 +2822,8 @@ input[type="range"].slider:disabled { cursor: default; }
       state.lyricsUserAt = 0;
       seekTo(ln.t);
     });
-    $('lyrics-btn').addEventListener('click', toggleLyrics);
+    $('lyrics-btn').addEventListener('click', () => toggleOverlay('lyrics'));
+    $('queue-btn').addEventListener('click', () => toggleOverlay('queue'));
 
     for (const c of document.querySelectorAll('.chip')) {
       c.addEventListener('click', () => {
