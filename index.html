@@ -11,14 +11,16 @@
   --font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 
-  --bg: #e3e5e8;
-  --bg-2: #d3d7dc;
+  --bg-base: #e3e5e8;
+  --bg-2-base: #d3d7dc;
+  --lift-max: 70%;
+  --dim-max: 22%;
   --fg: #1c2026;
   --muted: rgba(28, 32, 38, .6);
   --faint: rgba(28, 32, 38, .36);
   --glass: rgba(255, 255, 255, .44);
   --glass-hi: rgba(255, 255, 255, .7);
-  --glass-solid: #f3f4f6;
+  --glass-solid-base: #f3f4f6;
   --sheen: rgba(255, 255, 255, .42);
   --edge: rgba(255, 255, 255, .8);
   --edge-low: rgba(255, 255, 255, .3);
@@ -30,8 +32,8 @@
   --accent-fg: var(--accent-fg-l, #ffffff);
   --love: #b8455d;
   --bar: color-mix(in srgb, var(--accent) 26%, transparent);
-  --tint-mix: 46%;
-  --tint-mix-2: 34%;
+  --tint-mix: min(100%, calc(46% * var(--tint-scale, 1)));
+  --tint-mix-2: min(100%, calc(34% * var(--tint-scale, 1)));
 
   --radius: 24px;
   --radius-md: 16px;
@@ -39,14 +41,16 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #131518;
-    --bg-2: #1c2025;
+    --bg-base: #131518;
+    --bg-2-base: #1c2025;
+    --lift-max: 14%;
+    --dim-max: 60%;
     --fg: #e7e9ec;
     --muted: rgba(231, 233, 236, .6);
     --faint: rgba(231, 233, 236, .34);
     --glass: rgba(36, 40, 46, .46);
     --glass-hi: rgba(255, 255, 255, .08);
-    --glass-solid: #1d2126;
+    --glass-solid-base: #1d2126;
     --sheen: rgba(255, 255, 255, .045);
     --edge: rgba(255, 255, 255, .1);
     --edge-low: rgba(255, 255, 255, .035);
@@ -57,20 +61,22 @@
     --accent-fg: var(--accent-fg-d, #10161c);
     --love: #e58c9e;
     --bar: color-mix(in srgb, var(--accent) 30%, transparent);
-    --tint-mix: 36%;
-    --tint-mix-2: 26%;
+    --tint-mix: min(100%, calc(36% * var(--tint-scale, 1)));
+    --tint-mix-2: min(100%, calc(26% * var(--tint-scale, 1)));
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #131518;
-  --bg-2: #1c2025;
+  --bg-base: #131518;
+  --bg-2-base: #1c2025;
+  --lift-max: 14%;
+  --dim-max: 60%;
   --fg: #e7e9ec;
   --muted: rgba(231, 233, 236, .6);
   --faint: rgba(231, 233, 236, .34);
   --glass: rgba(36, 40, 46, .46);
   --glass-hi: rgba(255, 255, 255, .08);
-  --glass-solid: #1d2126;
+  --glass-solid-base: #1d2126;
   --sheen: rgba(255, 255, 255, .045);
   --edge: rgba(255, 255, 255, .1);
   --edge-low: rgba(255, 255, 255, .035);
@@ -81,8 +87,8 @@
   --accent-fg: var(--accent-fg-d, #10161c);
   --love: #e58c9e;
   --bar: color-mix(in srgb, var(--accent) 30%, transparent);
-  --tint-mix: 36%;
-  --tint-mix-2: 26%;
+  --tint-mix: min(100%, calc(36% * var(--tint-scale, 1)));
+  --tint-mix-2: min(100%, calc(26% * var(--tint-scale, 1)));
   color-scheme: dark;
 }
 
@@ -102,6 +108,12 @@ body {
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 img { max-width: 100%; display: block; }
+/* Brightness: mix the theme's background towards white (--lift) or black (--dim), within limits that keep text readable. */
+:root, :root[data-theme] {
+  --bg: color-mix(in srgb, color-mix(in srgb, var(--bg-base), #fff calc(var(--lift, 0) * var(--lift-max))), #000 calc(var(--dim, 0) * var(--dim-max)));
+  --bg-2: color-mix(in srgb, color-mix(in srgb, var(--bg-2-base), #fff calc(var(--lift, 0) * var(--lift-max))), #000 calc(var(--dim, 0) * var(--dim-max)));
+  --glass-solid: color-mix(in srgb, color-mix(in srgb, var(--glass-solid-base), #fff calc(var(--lift, 0) * var(--lift-max))), #000 calc(var(--dim, 0) * var(--dim-max)));
+}
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 svg.i { width: 20px; height: 20px; flex: none; }
@@ -232,7 +244,21 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .pl-name, .pl-owner { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pl-name { font-weight: 600; }
 .pl-owner { font-size: 12px; color: var(--muted); }
-.side-foot { display: flex; align-items: center; gap: 4px; padding: 10px 4px 0; border-top: 1px solid var(--rim); }
+.side-foot { position: relative; display: flex; align-items: center; gap: 4px; padding: 10px 4px 0; border-top: 1px solid var(--rim); }
+.look-pop {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); z-index: 20;
+  display: grid; gap: 10px; padding: 14px 14px 10px;
+  background: var(--glass-solid); color: var(--fg);
+  border: 1px solid var(--rim); border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+.look-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; align-items: center; font-size: 12px; font-weight: 600; }
+.look-row output { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.look-row .slider { grid-column: 1 / -1; }
+.look-pop input[type="range"].slider::-webkit-slider-thumb { opacity: 1; }
+.look-pop input[type="range"].slider::-moz-range-thumb { opacity: 1; }
+.look-reset { justify-self: center; padding: 4px 10px; border-radius: 999px; font-size: 12px; color: var(--muted); }
+.look-reset:hover { background: var(--hover); color: var(--fg); }
 .side-foot .who { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
 
 /* Queue panel (right), built like the library sidebar */
@@ -648,7 +674,14 @@ input[type="range"].slider:disabled { cursor: default; }
     <ul class="playlists" id="playlists" aria-labelledby="pl-label"></ul>
     <div class="side-foot">
       <span class="who" id="who"></span>
-      <button class="icon-btn" id="effects" type="button" aria-pressed="false" title="Plain background" aria-label="Plain background"><svg class="i"><use href="#i-drop"/></svg></button>
+      <button class="icon-btn" id="effects" type="button" aria-expanded="false" aria-controls="look-pop" title="Colour and brightness" aria-label="Colour and brightness"><svg class="i"><use href="#i-drop"/></svg></button>
+      <div class="look-pop" id="look-pop" role="dialog" aria-label="Colour and brightness" hidden>
+        <label class="look-row">Colour<output id="look-colour-v" for="look-colour"></output>
+          <input type="range" class="slider" id="look-colour" min="0" max="100" step="5" value="50"></label>
+        <label class="look-row">Brightness<output id="look-bright-v" for="look-bright"></output>
+          <input type="range" class="slider" id="look-bright" min="0" max="100" step="5" value="50"></label>
+        <button class="look-reset" id="look-reset" type="button">Reset</button>
+      </div>
       <button class="icon-btn" id="signout" type="button" title="Sign out" aria-label="Sign out"><svg class="i"><use href="#i-signout"/></svg></button>
     </div>
   </aside>
@@ -3683,14 +3716,25 @@ input[type="range"].slider:disabled { cursor: default; }
       if (state.player) state.player.setVolume(vol.value / 100);
     });
 
-    $('effects').addEventListener('click', () => {
-      const lite = !document.body.classList.contains('lite');
-      document.body.classList.toggle('lite', lite);
-      $('effects').setAttribute('aria-pressed', lite ? 'true' : 'false');
-      store.set('lite', lite);
-      if (lite) { state.tint = null; $('amb-a').classList.remove('on'); $('amb-b').classList.remove('on'); }
-      else if (state.pb) tintFrom(pickImg(state.pb.images, 64));
+    const pop = $('look-pop');
+    const closeLook = (refocus) => { pop.hidden = true; $('effects').setAttribute('aria-expanded', 'false'); if (refocus) $('effects').focus(); };
+    $('effects').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!pop.hidden) { closeLook(false); return; }
+      pop.hidden = false;
+      $('effects').setAttribute('aria-expanded', 'true');
+      $('look-colour').focus();
     });
+    pop.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeLook(true); } });
+    document.addEventListener('click', (e) => { if (!pop.hidden && !pop.contains(e.target)) closeLook(false); });
+    let lookFrame = 0;
+    const onLook = () => {
+      cancelAnimationFrame(lookFrame);
+      lookFrame = requestAnimationFrame(() => applyLook({ colour: +$('look-colour').value, bright: +$('look-bright').value }, true));
+    };
+    $('look-colour').addEventListener('input', onLook);
+    $('look-bright').addEventListener('input', onLook);
+    $('look-reset').addEventListener('click', () => applyLook({ colour: 50, bright: 50 }, true));
 
     $('signout').addEventListener('click', () => {
       if (state.player) state.player.disconnect();
@@ -3796,10 +3840,29 @@ input[type="range"].slider:disabled { cursor: default; }
     openView({ type: 'home' });
   }
 
+  // Background colour (how strongly the cover tints it; 0 = plain, which also skips the cover work)
+  // and brightness. Both only change CSS variables.
+  function applyLook(look, save) {
+    const c = Math.max(0, Math.min(100, Math.round(look.colour))), b = Math.max(0, Math.min(100, Math.round(look.bright)));
+    const root = document.documentElement.style;
+    root.setProperty('--tint-scale', String(c / 50));
+    root.setProperty('--lift', b > 50 ? String((b - 50) / 50) : '0');
+    root.setProperty('--dim', b < 50 ? String((50 - b) / 50) : '0');
+    const plain = c === 0;
+    if (plain !== document.body.classList.contains('lite')) {
+      document.body.classList.toggle('lite', plain);
+      if (plain) { state.tint = null; $('amb-a').classList.remove('on'); $('amb-b').classList.remove('on'); }
+      else if (state.pb) tintFrom(pickImg(state.pb.images, 64));
+    }
+    for (const [id, v] of [['look-colour', c], ['look-bright', b]]) { $(id).value = v; $(id).style.setProperty('--p', v + '%'); }
+    $('look-colour-v').textContent = plain ? 'Off' : c === 50 ? 'Normal' : c + '%';
+    $('look-bright-v').textContent = b === 50 ? 'Normal' : (b > 50 ? '+' : '−') + Math.abs(b - 50) * 2 + '%';
+    if (save) { store.set('look', { colour: c, bright: b }); store.del('lite'); }
+  }
+
   async function boot() {
-    const lite = store.get('lite') === true;
-    document.body.classList.toggle('lite', lite);
-    $('effects').setAttribute('aria-pressed', lite ? 'true' : 'false');
+    const saved = store.get('look');
+    applyLook(saved && typeof saved.colour === 'number' ? saved : { colour: store.get('lite') === true ? 0 : 50, bright: 50 }, false);
     store.del('view');
     wire();
 
