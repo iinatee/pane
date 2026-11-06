@@ -298,6 +298,12 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .sort-option:hover, .sort-option.active { background: color-mix(in srgb, var(--fg) 8%, transparent); }
 .sort-option[aria-selected="true"] { color: var(--accent); font-weight: 600; }
 .sort-option svg.i { width: 16px; height: 16px; visibility: hidden; }
+.sort-menu { max-height: min(60vh, 440px); overflow-y: auto; }
+.sort-menu.up { top: auto; bottom: calc(100% + 6px); }
+.menu-sep { height: 1px; margin: 6px 4px; background: var(--rim); }
+.menu-head { white-space: nowrap; padding: 6px 12px 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.sort-btn.small { padding: 6px 10px 6px 14px; font-size: 12px; }
+.sec-head .sort-wrap { margin-left: auto; }
 .sort-option[aria-selected="true"] svg.i { visibility: visible; }
 .filter-input { padding-right: 120px; }
 .filter-input::-webkit-search-cancel-button { margin-right: 4px; }
@@ -358,6 +364,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .chart-card { margin: 0; padding: 14px 16px 12px; border-radius: var(--radius-md); background: var(--glass-hi); box-shadow: inset 0 1px 0 var(--edge); min-width: 0; }
 .chart-card figcaption { font-size: 13px; font-weight: 600; margin-bottom: 10px; text-align: center; }
 .chart-card figcaption span { font-weight: 400; color: var(--faint); margin-left: 6px; }
+.chart-card figcaption b { font-weight: inherit; }
 .bars { display: flex; align-items: flex-end; gap: 4px; height: 96px; }
 .bars.hours { gap: 2px; }
 .bar { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; }
@@ -379,6 +386,10 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .import-text a { color: var(--accent); }
 .import-status { margin: 0; font-size: 13px; font-weight: 600; }
 .import-status:empty { display: none; }
+.import-card.done { order: 10; }
+.bars.pickable .bar { cursor: pointer; border-radius: 4px; }
+.bars.pickable .bar:hover i, .bars.pickable .bar:focus-visible i { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.bars.pickable .bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .chips { display: inline-flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--rim); margin-left: auto; }
 .chip { border: 0; background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -663,7 +674,7 @@ input[type="range"].slider:disabled { cursor: default; }
       </div>
       <div class="sort-wrap">
         <button class="sort-btn" id="sort-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="sort-menu">
-          <span id="sort-label">Custom order</span><svg class="i"><use href="#i-chevron"/></svg>
+          <span class="menu-label" id="sort-label">Custom order</span><svg class="i"><use href="#i-chevron"/></svg>
         </button>
         <ul class="sort-menu" id="sort-menu" role="listbox" aria-label="Sort songs" tabindex="-1" hidden>
           <li class="sort-option" role="option" data-value="custom" aria-selected="false">Custom order<svg class="i"><use href="#i-check"/></svg></li>
@@ -691,14 +702,19 @@ input[type="range"].slider:disabled { cursor: default; }
           </div>
         </section>
         <section aria-labelledby="h-time" id="time-wrap" hidden>
-          <div class="sec-head"><h3 id="h-time">Over time</h3><span class="sec-note" id="time-note"></span></div>
+          <div class="sec-head"><h3 id="h-time">Over time</h3><span class="sec-note" id="time-note"></span>
+            <div class="chips" id="time-chips" role="group" aria-label="Over time view" hidden>
+              <button class="chip" type="button" data-tv="months" aria-pressed="true">12 months</button>
+              <button class="chip" type="button" data-tv="years" aria-pressed="false">By year</button>
+            </div>
+          </div>
           <div class="stats">
             <div class="stat"><span class="stat-label">Listening time</span><span class="stat-value" id="t-total">—</span></div>
             <div class="stat"><span class="stat-label">Songs played</span><span class="stat-value" id="t-plays">—</span></div>
             <div class="stat"><span class="stat-label">Daily average</span><span class="stat-value" id="t-avg">—</span></div>
           </div>
           <div class="charts">
-            <figure class="chart-card"><figcaption>Monthly listening<span>last 12 months</span></figcaption><div class="bars" id="c-months"></div><div class="axis" id="c-months-axis"></div></figure>
+            <figure class="chart-card"><figcaption><b id="c-months-title">Monthly listening</b><span id="c-months-range">last 12 months</span></figcaption><div class="bars" id="c-months"></div><div class="axis" id="c-months-axis"></div></figure>
           </div>
         </section>
         <div class="import-card" id="import-card">
@@ -717,11 +733,16 @@ input[type="range"].slider:disabled { cursor: default; }
         </div>
         <section aria-labelledby="h-top">
           <div class="sec-head">
-            <h3 id="h-top">Your top artists</h3>
-            <div class="chips" role="group" aria-label="Time range">
-              <button class="chip" type="button" data-range="short_term" aria-pressed="false">4 weeks</button>
-              <button class="chip" type="button" data-range="medium_term" aria-pressed="false">6 months</button>
-              <button class="chip" type="button" data-range="long_term" aria-pressed="false">12 months</button>
+            <h3 id="h-top">Your top artists</h3><span class="sec-note" id="top-note"></span>
+            <div class="sort-wrap" id="range-wrap">
+              <button class="sort-btn small" id="range-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="range-menu">
+                <span class="menu-label" id="range-label">Last 4 weeks</span><svg class="i"><use href="#i-chevron"/></svg>
+              </button>
+              <ul class="sort-menu" id="range-menu" role="listbox" aria-label="Time range" tabindex="-1" hidden>
+                <li class="sort-option" role="option" data-value="short_term" aria-selected="false">Last 4 weeks<svg class="i"><use href="#i-check"/></svg></li>
+                <li class="sort-option" role="option" data-value="medium_term" aria-selected="false">Last 6 months<svg class="i"><use href="#i-check"/></svg></li>
+                <li class="sort-option" role="option" data-value="long_term" aria-selected="false">Last 12 months<svg class="i"><use href="#i-check"/></svg></li>
+              </ul>
             </div>
           </div>
           <div class="notice" id="top-scope" hidden>
@@ -732,7 +753,7 @@ input[type="range"].slider:disabled { cursor: default; }
         </section>
         <div class="two" id="top-more">
           <section aria-labelledby="h-songs">
-            <div class="sec-head"><h3 id="h-songs">Top songs</h3></div>
+            <div class="sec-head"><h3 id="h-songs">Top songs</h3><span class="sec-note" id="songs-note"></span></div>
             <ol class="top-tracks" id="top-tracks"></ol>
           </section>
           <section aria-labelledby="h-genres" id="genres-wrap" hidden>
@@ -1519,40 +1540,69 @@ input[type="range"].slider:disabled { cursor: default; }
     withWholeList(renderList);
   }
   // The sort menu: Pane's own list, so it follows the theme (the browser's menu didn't).
-  function setSortUI(value) {
-    for (const o of $('sort-menu').children) o.setAttribute('aria-selected', o.dataset.value === value ? 'true' : 'false');
-    const chosen = $('sort-menu').querySelector(`[data-value="${value}"]`);
-    $('sort-label').textContent = chosen ? chosen.firstChild.textContent : 'Sort';
+  // A small themed dropdown: a .sort-btn that opens a .sort-menu of .sort-option items.
+  function makeMenu(wrap, onPick) {
+    const btn = wrap.querySelector('.sort-btn'), menu = wrap.querySelector('.sort-menu'), label = wrap.querySelector('.menu-label');
+    const items = () => [...menu.querySelectorAll('.sort-option')].filter((o) => !o.hidden);
+    const m = {
+      set(value) {
+        for (const o of menu.querySelectorAll('.sort-option')) o.setAttribute('aria-selected', o.dataset.value === value ? 'true' : 'false');
+        const chosen = menu.querySelector(`.sort-option[data-value="${value}"]`);
+        if (chosen) label.textContent = chosen.firstChild.textContent;
+      },
+      open() {
+        menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+        // Fit inside whatever scrolls around it, opening upwards when there's more room above.
+        let box = { top: 0, bottom: window.innerHeight };
+        for (let n = wrap.parentElement; n && n !== document.body; n = n.parentElement) {
+          const oy = getComputedStyle(n).overflowY;
+          if (oy === 'auto' || oy === 'scroll' || oy === 'hidden') { box = n.getBoundingClientRect(); break; }
+        }
+        const r = btn.getBoundingClientRect();
+        const below = box.bottom - r.bottom - 12, above = r.top - box.top - 12;
+        menu.classList.remove('up');
+        menu.style.maxHeight = '';
+        const want = Math.min(menu.scrollHeight, 440);
+        const up = below < want && above > below;
+        menu.classList.toggle('up', up);
+        menu.style.maxHeight = Math.max(120, Math.min(440, up ? above : below)) + 'px';
+        const list = items();
+        const sel = list.find((o) => o.getAttribute('aria-selected') === 'true') || list[0];
+        list.forEach((o) => o.classList.toggle('active', o === sel));
+        if (sel) sel.scrollIntoView({ block: 'nearest' });
+        menu.focus();
+      },
+      close(refocus) {
+        menu.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        if (refocus) btn.focus();
+      },
+      pick(o) { m.close(true); onPick(o.dataset.value); }
+    };
+    btn.addEventListener('click', (e) => { e.stopPropagation(); if (menu.hidden) m.open(); else m.close(false); });
+    menu.addEventListener('keydown', (e) => {
+      const list = items();
+      let i = list.findIndex((o) => o.classList.contains('active'));
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        i = (i + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length;
+        list.forEach((o, k) => o.classList.toggle('active', k === i));
+        list[i].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (list[i]) m.pick(list[i]);
+      } else if (e.key === 'Escape' || e.key === 'Tab') {
+        e.preventDefault();
+        m.close(true);
+      }
+    });
+    menu.addEventListener('click', (e) => { const o = e.target.closest('.sort-option'); if (o) m.pick(o); });
+    document.addEventListener('click', (e) => { if (!menu.hidden && !wrap.contains(e.target)) m.close(false); });
+    return m;
   }
-  function openSortMenu() {
-    const menu = $('sort-menu');
-    menu.hidden = false;
-    $('sort-btn').setAttribute('aria-expanded', 'true');
-    const items = [...menu.children].filter((o) => !o.hidden);
-    const sel = items.find((o) => o.getAttribute('aria-selected') === 'true') || items[0];
-    items.forEach((o) => o.classList.toggle('active', o === sel));
-    menu.focus();
-  }
-  function closeSortMenu(refocus) {
-    $('sort-menu').hidden = true;
-    $('sort-btn').setAttribute('aria-expanded', 'false');
-    if (refocus) $('sort-btn').focus();
-  }
-  function sortMenuKey(e) {
-    const items = [...$('sort-menu').children].filter((o) => !o.hidden);
-    let i = items.findIndex((o) => o.classList.contains('active'));
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      i = (i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
-      items.forEach((o, k) => o.classList.toggle('active', k === i));
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (items[i]) { closeSortMenu(true); applySort(items[i].dataset.value); }
-    } else if (e.key === 'Escape' || e.key === 'Tab') {
-      e.preventDefault();
-      closeSortMenu(true);
-    }
-  }
+  let sortMenu = null, rangeMenu = null;
+  function setSortUI(value) { if (sortMenu) sortMenu.set(value); }
   function applySort(value) {
     const v = state.view;
     if (!v || (v.type !== 'liked' && v.type !== 'playlist')) return;
@@ -1928,16 +1978,24 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     const recentFrom = Date.now() - 45 * DAY;
     let recent = uniq.filter((e) => e[0] >= recentFrom);
+    const tops = buildTops(uniq);
     // Keep anything from an earlier import that this one doesn't cover.
     const prev = getImport();
     if (prev) {
       const s = dayKey(new Date(range[0])), t = dayKey(new Date(range[1]));
       for (const [k, v] of Object.entries(prev.daily)) if (k < s || k > t) daily[k] = v;
       recent = recent.concat((prev.recent || []).filter((e) => e[0] >= recentFrom && (e[0] < range[0] || e[0] > range[1]))).sort((a, b) => a[0] - b[0]);
+      if (prev.tops) {
+        // Years this file doesn't touch keep their earlier figures, and count towards all time.
+        const y0 = new Date(range[0]).getFullYear(), y1 = new Date(range[1]).getFullYear();
+        const kept = Object.keys(prev.tops).filter((k) => k !== 'all' && (+k < y0 || +k > y1));
+        for (const k of kept) tops[k] = prev.tops[k];
+        if (kept.length) tops.all = mergeTops([tops.all, ...kept.map((k) => prev.tops[k])]);
+      }
       range = [Math.min(range[0], prev.range[0]), Math.max(range[1], prev.range[1])];
     }
     const total = Object.values(daily).reduce((n, v) => n + v[1], 0);
-    const imp = { range, daily, recent, plays: total, at: Date.now() };
+    const imp = { range, daily, recent, tops, plays: total, at: Date.now() };
     try {
       localStorage.setItem('pane.import', JSON.stringify(imp));
     } catch {
@@ -1951,6 +2009,189 @@ input[type="range"].slider:disabled { cursor: default; }
     store.set('collectedDaily', cd);
     say('');
     toast(`Imported ${fmtCount(uniq.filter((e) => e[4] >= 30000).length, 'play')} from ${fmtDate(range[0])} to ${fmtDate(range[1])}`);
+  }
+
+  // Top artists (by listening time) and songs (by plays) for each calendar year and all time.
+  // Stored compactly: a = [name, ms, plays, top song uri], t = [uri, name, artist, ms, plays].
+  const TOP_ARTISTS_KEPT = 50, TOP_TRACKS_KEPT = 30;
+  function buildTops(plays) {
+    const groups = new Map();
+    const group = (k) => { let g = groups.get(k); if (!g) groups.set(k, g = { a: new Map(), t: new Map() }); return g; };
+    for (const e of plays) {
+      const ms = e[4];
+      if (!(ms > 0)) continue;
+      const n = ms >= 30000 ? 1 : 0;
+      const tk = e[1] || e[2] + '|' + e[3];
+      for (const g of [group('all'), group(String(new Date(e[0]).getFullYear()))]) {
+        let a = g.a.get(e[3]);
+        if (!a) g.a.set(e[3], a = [e[3], 0, 0, '']);
+        a[1] += ms; a[2] += n;
+        let t = g.t.get(tk);
+        if (!t) g.t.set(tk, t = [e[1], e[2], e[3], 0, 0]);
+        t[3] += ms; t[4] += n;
+      }
+    }
+    const out = {};
+    for (const [k, g] of groups) out[k] = finishTops(g.a, g.t);
+    return out;
+  }
+  function finishTops(aMap, tMap) {
+    const tracks = [...tMap.values()];
+    // Each artist's most-played song, used to find their picture and to play something by them.
+    const best = new Map();
+    for (const t of tracks) { if (!t[0]) continue; const b = best.get(t[2]); if (!b || t[3] > b[3]) best.set(t[2], t); }
+    const a = [...aMap.values()].sort((x, y) => y[1] - x[1]).slice(0, TOP_ARTISTS_KEPT).map((r) => [r[0], r[1], r[2], (best.get(r[0]) || [''])[0]]);
+    const t = tracks.sort((x, y) => y[4] - x[4] || y[3] - x[3]).slice(0, TOP_TRACKS_KEPT);
+    return { a, t };
+  }
+  function mergeTops(list) {
+    const aMap = new Map(), tMap = new Map();
+    for (const g of list) {
+      if (!g) continue;
+      for (const r of g.a) { const a = aMap.get(r[0]); if (a) { a[1] += r[1]; a[2] += r[2]; } else aMap.set(r[0], r.slice()); }
+      for (const r of g.t) { const k = r[0] || r[1] + '|' + r[2]; const t = tMap.get(k); if (t) { t[3] += r[3]; t[4] += r[4]; } else tMap.set(k, r.slice()); }
+    }
+    const a = [...aMap.values()].sort((x, y) => y[1] - x[1]).slice(0, TOP_ARTISTS_KEPT);
+    const t = [...tMap.values()].sort((x, y) => y[4] - x[4] || y[3] - x[3]).slice(0, TOP_TRACKS_KEPT);
+    return { a, t };
+  }
+  const isImportRange = (r) => r === 'all' || /^y\d{4}$/.test(r || '');
+  // Years that have top lists: those in the import, plus this year once Pane has collected plays in it.
+  function importYears() {
+    const imp = getImport();
+    if (!imp || !imp.tops) return [];
+    const years = new Set(Object.keys(imp.tops).filter((k) => k !== 'all'));
+    const thisYear = String(new Date().getFullYear());
+    if (!years.has(thisYear) && getHistory().some((e) => !inImport(e[0]) && String(new Date(e[0]).getFullYear()) === thisYear)) years.add(thisYear);
+    return [...years].sort().reverse();
+  }
+  // A year's (or all time's) lists from the import, plus plays Pane collected after it.
+  function topsFor(range) {
+    const imp = getImport();
+    if (!imp || !imp.tops) return null;
+    const key = range === 'all' ? 'all' : range.slice(1);
+    const src = imp.tops[key] || { a: [], t: [] };
+    const a = new Map(src.a.map((r) => [r[0], { name: r[0], ms: r[1], n: r[2], track: r[3] }]));
+    const t = new Map(src.t.map((r) => [r[0] || r[1] + '|' + r[2], { uri: r[0], name: r[1], artist: r[2], ms: r[3], n: r[4] }]));
+    let added = false;
+    for (const e of getHistory()) {
+      if (inImport(e[0]) || (key !== 'all' && String(new Date(e[0]).getFullYear()) !== key)) continue;
+      added = true;
+      const ms = e[4] || 0, n = counts(e) ? 1 : 0, name = e[5] || e[3];
+      let ar = a.get(name);
+      if (!ar) a.set(name, ar = { name, ms: 0, n: 0, track: e[1] });
+      ar.ms += ms; ar.n += n;
+      const tk = e[1] || e[2] + '|' + e[3];
+      let tr = t.get(tk);
+      if (!tr) t.set(tk, tr = { uri: e[1], name: e[2], artist: e[3], ms: 0, n: 0 });
+      tr.ms += ms; tr.n += n;
+    }
+    return {
+      artists: [...a.values()].sort((x, y) => y.ms - x.ms),
+      tracks: [...t.values()].sort((x, y) => y.n - x.n || y.ms - x.ms),
+      added
+    };
+  }
+  function buildRangeMenu() {
+    const menu = $('range-menu');
+    for (const o of menu.querySelectorAll('.from-import')) o.remove();
+    const years = importYears();
+    if (!years.length) return;
+    const add = (node) => { node.classList.add('from-import'); menu.appendChild(node); };
+    const sep = el('li', 'menu-sep'); sep.setAttribute('role', 'separator'); add(sep);
+    add(el('li', 'menu-head', 'From your Spotify data'));
+    for (const [value, text] of [['all', 'All time'], ...years.map((y) => ['y' + y, y])]) {
+      const o = el('li', 'sort-option', text);
+      o.setAttribute('role', 'option');
+      o.dataset.value = value;
+      o.setAttribute('aria-selected', 'false');
+      o.appendChild(icon('i-check'));
+      add(o);
+    }
+  }
+
+  // Pictures for songs and artists from the import, looked up one at a time and kept for good.
+  function getLookups() {
+    if (!state.lookups) {
+      const L = store.get('lookups');
+      state.lookups = L && L.t && L.a ? L : { t: {}, a: {} };
+    }
+    return state.lookups;
+  }
+  const trackIdOf = (uri) => (/^spotify:track:([A-Za-z0-9]+)$/.exec(uri || '') || [])[1] || '';
+  function artistInfo(name, trackUri) {
+    const L = getLookups();
+    const t = L.t[trackIdOf(trackUri)];
+    if (!t || !t.ar || !t.ar.length) return null;
+    const n = norm(name);
+    const hit = t.ar.find((x) => norm(x[1]) === n) || t.ar[0];
+    return Object.assign({ id: hit[0] }, L.a[hit[0]] || {});
+  }
+  let lookupRun = 0;
+  async function fillLookups(trackUris, artistTracks, onUpdate) {
+    const run = ++lookupRun;
+    const L = getLookups();
+    let fresh = 0;
+    const flush = () => { if (!fresh) return; fresh = 0; store.set('lookups', L); if (run === lookupRun) onUpdate(); };
+    const pause = () => new Promise((r) => setTimeout(r, 120));
+    const tIds = [...new Set([...trackUris, ...artistTracks.map((x) => x.track)].map(trackIdOf).filter(Boolean))].filter((id) => !L.t[id]);
+    try {
+      for (const id of tIds) {
+        if (run !== lookupRun) return;
+        try {
+          const t = await api('/tracks/' + id);
+          const ar = [...((t && t.artists) || []), ...((t && t.album && t.album.artists) || [])].filter((a) => a && a.id).map((a) => [a.id, a.name || '']);
+          L.t[id] = { img: pickImg(t && t.album && t.album.images, 64), dur: (t && t.duration_ms) || 0, ar };
+        } catch (e) {
+          if (e.auth || e.status === 429) throw e;
+          L.t[id] = { img: '', dur: 0, ar: [] };
+        }
+        if (++fresh >= 4) flush();
+        await pause();
+      }
+      const aIds = [...new Set(artistTracks.map((x) => { const i = artistInfo(x.name, x.track); return i && i.id; }).filter(Boolean))].filter((id) => !L.a[id]);
+      for (const id of aIds) {
+        if (run !== lookupRun) return;
+        try {
+          const a = await api('/artists/' + id);
+          L.a[id] = { img: pickImg(a && a.images, 160), uri: (a && a.uri) || 'spotify:artist:' + id, genres: (a && Array.isArray(a.genres)) ? a.genres : [] };
+        } catch (e) {
+          if (e.auth || e.status === 429) throw e;
+          L.a[id] = { img: '', uri: 'spotify:artist:' + id, genres: [] };
+        }
+        if (++fresh >= 4) flush();
+        await pause();
+      }
+    } catch (e) {
+      if (e.auth) handleError(e);
+    }
+    flush();
+  }
+  function renderImportTop(range, token) {
+    const data = topsFor(range);
+    if (!data) return;
+    const L = getLookups();
+    const fmtMs = (ms) => (ms >= 10 * 3600e3 ? `${fmtNum(Math.round(ms / 3600e3))} h` : fmtDur(ms));
+    const artists = data.artists.slice(0, 12).map((x, i) => {
+      const info = artistInfo(x.name, x.track) || {};
+      return { name: x.name, image: info.img || '', uri: info.uri || '', track: x.track, genres: info.genres || [], label: `#${i + 1} · ${fmtMs(x.ms)}`, title: `${fmtMs(x.ms)}, ${fmtCount(x.n, 'play')}` };
+    });
+    const tracks = data.tracks.slice(0, 10).map((x) => {
+      const info = L.t[trackIdOf(x.uri)] || {};
+      return { uri: x.uri, name: x.name, artists: x.artist, image: info.img || '', duration: info.dur || 0, label: fmtCount(x.n, 'play'), title: `${fmtCount(x.n, 'play')}, ${fmtMs(x.ms)}` };
+    });
+    const src = data.added ? 'from your Spotify data and plays Pane collected' : 'from your Spotify data';
+    $('top-note').textContent = `by listening time, ${src}`;
+    $('songs-note').textContent = 'by plays';
+    renderTopArtists(artists, 'No listening in this period.');
+    renderTopTracks(tracks);
+    renderGenres(artists);
+    const missing = tracks.some((t) => t.uri && !L.t[trackIdOf(t.uri)]) || artists.some((a) => a.track && !a.uri);
+    if (missing) {
+      fillLookups(tracks.map((t) => t.uri), artists.filter((a) => a.track).map((a) => ({ name: a.name, track: a.track })), () => {
+        if (token === state.viewToken && state.range === range) renderImportTop(range, token);
+      });
+    }
   }
 
   // ---------- home ----------
@@ -2127,54 +2368,112 @@ input[type="range"].slider:disabled { cursor: default; }
     $('time-wrap').hidden = !show;
     if (!show) return;
     const daily = allDaily();
+    const months = new Map(), years = new Map();
     let ms = 0, plays = 0;
-    const months = new Map();
     for (const [k, v] of daily) {
       ms += v[0]; plays += v[1];
-      const m = k.slice(0, 7);
+      const m = k.slice(0, 7), y = k.slice(0, 4);
       months.set(m, (months.get(m) || 0) + v[0]);
+      const yv = years.get(y) || [0, 0]; yv[0] += v[0]; yv[1] += v[1]; years.set(y, yv);
     }
-    const daysCovered = Math.max(1, Math.round((Date.now() - first) / DAY));
-    $('t-total').textContent = fmtHours(ms);
-    $('t-plays').textContent = fmtNum(plays);
-    $('t-avg').textContent = fmtDur(ms / daysCovered);
-    $('time-note').textContent = `Since ${fmtDate(first)}${imp ? ', from your Spotify data plus plays Pane collected' : ''}.`;
-
     const now = new Date();
-    const list = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      list.push({ d, key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') });
+    const firstDate = new Date(first);
+    const firstYear = firstDate.getFullYear(), thisYear = now.getFullYear();
+    const multiYear = firstYear < thisYear;
+    let view = state.timeView || 'months';
+    if (!multiYear || (/^\d{4}$/.test(view) && (+view < firstYear || +view > thisYear))) view = 'months';
+    $('time-chips').hidden = !multiYear;
+    for (const c of document.querySelectorAll('.chip[data-tv]')) c.setAttribute('aria-pressed', (c.dataset.tv === view || (c.dataset.tv === 'years' && /^\d{4}$/.test(view))) ? 'true' : 'false');
+    const firstMonth = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+    const src = imp ? ', from your Spotify data plus plays Pane collected' : '';
+
+    // Totals: everything, or the chosen year.
+    if (/^\d{4}$/.test(view)) {
+      const y = +view;
+      const yv = years.get(view) || [0, 0];
+      const from = Math.max(first, new Date(y, 0, 1).getTime());
+      const to = Math.min(Date.now(), new Date(y + 1, 0, 1).getTime());
+      $('t-total').textContent = fmtHours(yv[0]);
+      $('t-plays').textContent = fmtNum(yv[1]);
+      $('t-avg').textContent = fmtDur(yv[0] / Math.max(1, Math.round((to - from) / DAY)));
+      $('time-note').textContent = `${y === firstYear ? `${y}, from ${fmtDate(first)}` : y}${y === thisYear ? ' so far' : ''}${src}.`;
+    } else {
+      $('t-total').textContent = fmtHours(ms);
+      $('t-plays').textContent = fmtNum(plays);
+      $('t-avg').textContent = fmtDur(ms / Math.max(1, Math.round((Date.now() - first) / DAY)));
+      $('time-note').textContent = `Since ${fmtDate(first)}${src}.`;
     }
-    const firstMonth = new Date(first); firstMonth.setDate(1); firstMonth.setHours(0, 0, 0, 0);
-    const max = Math.max(1, ...list.map((m) => months.get(m.key) || 0));
+
+    // Bars: the last 12 months, one bar a year, or the months of one year.
+    let list;
+    if (view === 'years') {
+      list = [];
+      for (let y = firstYear; y <= thisYear; y++) {
+        const key = String(y);
+        list.push({
+          key, val: (years.get(key) || [0])[0], now: y === thisYear, nodata: false, partial: y === firstYear && first > new Date(y, 0, 1).getTime(),
+          label: key, axis: thisYear - firstYear > 7 ? '’' + key.slice(2) : key, pick: key
+        });
+      }
+      $('c-months-title').textContent = 'Yearly listening';
+      $('c-months-range').textContent = `since ${firstYear} · tap a year for its months`;
+    } else {
+      const year = /^\d{4}$/.test(view) ? +view : null;
+      list = [];
+      for (let i = 0; i < 12; i++) {
+        const d = year ? new Date(year, i, 1) : new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        const isNow = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        const future = d > now;
+        const nodata = d < firstMonth || future;
+        list.push({
+          key, val: months.get(key) || 0, now: isNow, nodata, future,
+          partial: !nodata && (d.getTime() === firstMonth.getTime() || isNow),
+          label: d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+          axis: d.toLocaleDateString('en-GB', { month: 'narrow' })
+        });
+      }
+      $('c-months-title').textContent = 'Monthly listening';
+      $('c-months-range').textContent = year ? String(year) : 'last 12 months';
+    }
+    const max = Math.max(1, ...list.map((m) => m.val));
     const bars = document.createDocumentFragment();
     const axis = document.createDocumentFragment();
-    list.forEach((m, i) => {
-      const val = months.get(m.key) || 0;
-      const isNow = i === list.length - 1;
-      const noData = m.d < firstMonth;
-      const partial = !noData && (m.d.getTime() === firstMonth.getTime() || isNow);
-      const bar = el('div', 'bar' + (isNow ? ' hi' : '') + (noData ? ' nodata' : '') + (partial ? ' partial' : ''));
-      const label = m.d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-      bar.title = `${label}: ${noData ? 'no history' : fmtHours(val) + (isNow ? ' so far' : partial ? ' (history starts mid-month)' : '')}`;
+    for (const m of list) {
+      const bar = el('div', 'bar' + (m.now ? ' hi' : '') + (m.nodata ? ' nodata' : '') + (m.partial ? ' partial' : ''));
+      const what = m.future ? 'still to come' : m.nodata ? 'no history'
+        : fmtHours(m.val) + (m.now ? ' so far' : m.partial ? ' (history starts part-way through)' : '');
+      bar.title = `${m.label}: ${what}`;
+      if (m.pick) {
+        bar.tabIndex = 0;
+        bar.setAttribute('role', 'button');
+        bar.setAttribute('aria-label', `${m.label}: ${what}. Show its months`);
+        const go = () => { state.timeView = m.pick; store.set('timeView', m.pick); renderOverTime(coverageStart()); };
+        bar.addEventListener('click', go);
+        bar.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      }
       const fill = el('i');
-      fill.style.setProperty('--h', (val / max * 100).toFixed(1) + '%');
+      fill.style.setProperty('--h', (m.val / max * 100).toFixed(1) + '%');
       bar.appendChild(fill);
       bars.appendChild(bar);
-      axis.appendChild(el('span', isNow ? 'hi' : '', m.d.toLocaleDateString('en-GB', { month: 'narrow' })));
-    });
+      axis.appendChild(el('span', m.now ? 'hi' : '', m.axis));
+    }
+    $('c-months').classList.toggle('pickable', view === 'years');
     $('c-months').replaceChildren(bars);
     $('c-months-axis').replaceChildren(axis);
   }
   function renderImportCard() {
     const imp = getImport();
+    const needsAgain = !!imp && !imp.tops;
+    $('import-card').classList.toggle('done', !!imp && !needsAgain);
     $('import-steps').hidden = !!imp;
-    $('import-title').textContent = imp ? 'Your Spotify data is imported' : 'Get your complete listening history';
-    $('import-desc').textContent = imp
-      ? `${fmtCount(imp.plays, 'play')} from ${fmtDate(imp.range[0])} to ${fmtDate(imp.range[1])}. Pane adds new plays from there. Import a newer download any time to refresh it.`
-      : 'Spotify only shares your last 50 plays with apps like Pane. For your real totals, ask Spotify for your data and import the file it emails you. It stays in this browser.';
-    $('import-btn').textContent = imp ? 'Import newer data' : 'Choose file';
+    $('import-title').textContent = needsAgain ? 'Import your file once more' : imp ? 'Your Spotify data is imported' : 'Get your complete listening history';
+    $('import-desc').textContent = needsAgain
+      ? `Pane can now show your top artists and songs for each year and all time. Choose the same .zip again to add them. Your ${fmtCount(imp.plays, 'play')} from ${fmtDate(imp.range[0])} are already saved.`
+      : imp
+        ? `${fmtCount(imp.plays, 'play')} from ${fmtDate(imp.range[0])} to ${fmtDate(imp.range[1])}. Pane adds new plays from there. Import a newer download any time to refresh it.`
+        : 'Spotify only shares your last 50 plays with apps like Pane. For your real totals, ask Spotify for your data and import the file it emails you. It stays in this browser.';
+    $('import-btn').textContent = needsAgain ? 'Choose file' : imp ? 'Import newer data' : 'Choose file';
   }
 
   function slimArtist(a) {
@@ -2204,8 +2503,25 @@ input[type="range"].slider:disabled { cursor: default; }
     if (on) $('rise-wrap').hidden = true;
   }
   async function renderTop(token) {
+    buildRangeMenu();
+    if (isImportRange(state.range) && !importYears().length) state.range = 'short_term';
+    if (state.range !== 'all' && isImportRange(state.range) && !importYears().includes(state.range.slice(1))) state.range = 'all';
     const range = state.range;
-    for (const c of document.querySelectorAll('.chip')) c.setAttribute('aria-pressed', c.dataset.range === range ? 'true' : 'false');
+    if (rangeMenu) rangeMenu.set(range);
+    if (isImportRange(range)) {
+      showScopeNotice(false);
+      renderImportTop(range, token);
+      if (hasScope('user-top-read') === false) { $('rise-wrap').hidden = true; return; }
+      try {
+        const [shortA, longA] = await Promise.all([getTop('artists', 'short_term', 50), getTop('artists', 'long_term', 50)]);
+        if (token === state.viewToken) renderRise(shortA, longA);
+      } catch (e) {
+        if (e.auth) handleError(e);
+      }
+      return;
+    }
+    $('top-note').textContent = '';
+    $('songs-note').textContent = '';
     if (hasScope('user-top-read') === false) { showScopeNotice(true); return; }
     showScopeNotice(false);
     try {
@@ -2227,9 +2543,9 @@ input[type="range"].slider:disabled { cursor: default; }
       $('top-artists').replaceChildren(el('li', 'home-empty', e.message));
     }
   }
-  function renderTopArtists(list) {
+  function renderTopArtists(list, emptyText) {
     const ul = $('top-artists');
-    if (!list.length) { ul.replaceChildren(el('li', 'home-empty', 'Not enough listening yet for Spotify to work out your top artists.')); return; }
+    if (!list.length) { ul.replaceChildren(el('li', 'home-empty', emptyText || 'Not enough listening yet for Spotify to work out your top artists.')); return; }
     const frag = document.createDocumentFragment();
     list.forEach((a, i) => {
       const li = el('li');
@@ -2238,8 +2554,13 @@ input[type="range"].slider:disabled { cursor: default; }
       b.setAttribute('aria-label', `Play ${a.name}`);
       const pic = el('span', 'artist-img');
       pic.appendChild(a.image ? imgEl(a.image) : icon('i-user'));
-      b.append(pic, el('span', 'artist-name', a.name), el('span', 'artist-rank', '#' + (i + 1)));
-      b.addEventListener('click', () => { activateIfHere(); startPlayback({ context_uri: a.uri }).catch(handleError); });
+      b.append(pic, el('span', 'artist-name', a.name), el('span', 'artist-rank', a.label || '#' + (i + 1)));
+      if (a.title) b.title = a.title;
+      b.addEventListener('click', () => {
+        if (!a.uri && !a.track) return;
+        activateIfHere();
+        startPlayback(a.uri ? { context_uri: a.uri } : { uris: [a.track] }).catch(handleError);
+      });
       li.appendChild(b);
       frag.appendChild(li);
     });
@@ -2258,10 +2579,12 @@ input[type="range"].slider:disabled { cursor: default; }
       if (t.image) art.appendChild(imgEl(t.image));
       const text = el('span', 'tt-text');
       text.append(el('b', null, t.name), el('small', null, t.artists));
-      b.append(el('span', 'tt-rank', String(i + 1)), art, text, el('span', 'tt-time', t.duration ? fmtTime(t.duration) : ''));
+      b.append(el('span', 'tt-rank', String(i + 1)), art, text, el('span', 'tt-time', t.label || (t.duration ? fmtTime(t.duration) : '')));
+      if (t.title) b.title = t.title;
       b.addEventListener('click', () => {
+        if (!t.uri) return;
         activateIfHere();
-        startPlayback({ uris: list.slice(i).map((x) => x.uri) }, { uri: t.uri, name: t.name, artists: t.artists, art: t.image, duration: t.duration }).catch(handleError);
+        startPlayback({ uris: list.slice(i).map((x) => x.uri).filter(Boolean) }, { uri: t.uri, name: t.name, artists: t.artists, art: t.image, duration: t.duration }).catch(handleError);
       });
       li.appendChild(b);
       frag.appendChild(li);
@@ -3257,29 +3580,22 @@ input[type="range"].slider:disabled { cursor: default; }
       const k = +b.dataset.q;
       if (k > 0) skipTo(k, q.next[k - 1].name);
     });
-    $('sort-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      if ($('sort-menu').hidden) openSortMenu(); else closeSortMenu(false);
+    sortMenu = makeMenu($('sort-btn').parentElement, applySort);
+    setSortUI(state.sort);
+    rangeMenu = makeMenu($('range-wrap'), (value) => {
+      if (state.range === value) return;
+      state.range = value;
+      store.set('range', value);
+      renderTop(state.viewToken);
     });
-    $('sort-menu').addEventListener('keydown', sortMenuKey);
-    $('sort-menu').addEventListener('click', (e) => {
-      const o = e.target.closest('.sort-option');
-      if (!o) return;
-      closeSortMenu(true);
-      applySort(o.dataset.value);
-    });
-    document.addEventListener('click', (e) => {
-      if (!$('sort-menu').hidden && !e.target.closest('.sort-wrap')) closeSortMenu(false);
-    });
-
-    for (const c of document.querySelectorAll('.chip')) {
+    for (const c of document.querySelectorAll('.chip[data-tv]')) {
       c.addEventListener('click', () => {
-        if (state.range === c.dataset.range) return;
-        state.range = c.dataset.range;
-        store.set('range', state.range);
-        renderTop(state.viewToken);
+        state.timeView = c.dataset.tv;
+        store.set('timeView', state.timeView);
+        renderOverTime(coverageStart());
       });
     }
+
     $('reconnect').addEventListener('click', () => { login().catch(handleError); });
 
     $('import-btn').addEventListener('click', () => $('import-file').click());
@@ -3292,6 +3608,7 @@ input[type="range"].slider:disabled { cursor: default; }
       try {
         await importFiles(files);
         renderHomeHistory();
+        renderTop(state.viewToken);
       } catch (e) {
         console.error(e);
         $('import-status').textContent = e && e.message ? e.message : 'Couldn’t read those files.';
@@ -3459,7 +3776,9 @@ input[type="range"].slider:disabled { cursor: default; }
     $('setup').hidden = true;
     $('app').hidden = false;
     const r = store.get('range');
-    if (['short_term', 'medium_term', 'long_term'].includes(r)) state.range = r;
+    if (['short_term', 'medium_term', 'long_term'].includes(r) || isImportRange(r)) state.range = r;
+    const tv = store.get('timeView');
+    if (tv === 'months' || tv === 'years' || /^\d{4}$/.test(tv || '')) state.timeView = tv;
     renderIdle('Connecting…');
     setQueuePanel(store.get('queuePanel') !== false);
     pollRemote();
