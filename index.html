@@ -230,10 +230,17 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 #app.resizing, #app.resizing * { cursor: col-resize !important; user-select: none; }
 #app.resizing * { transition: none !important; }
 .queue-panel.closing { opacity: .45; }
+.panel-toggle { position: absolute; top: 12px; width: 32px; height: 32px; }
+.sidebar .panel-toggle { right: 10px; }
+.queue-panel .panel-toggle { left: 10px; }
+.panel-toggle svg.i { width: 19px; height: 19px; }
+/* Folding and unfolding with the button glides; dragging stays instant. */
+#app.animating { transition: grid-template-columns .18s ease; }
 
 /* The library folded down to a strip of icons */
 @media (min-width: 761px) {
-  #app.rail .sidebar { padding: 18px 8px 12px; }
+  #app.rail .sidebar { padding: 12px 8px 12px; }
+  #app.rail .sidebar .panel-toggle { position: static; align-self: center; flex: none; }
   #app.rail .sidebar .brand, #app.rail .lib-chips { display: none; }
   #app.rail .sidebar .nav-btn, #app.rail .sidebar .pl-btn { justify-content: center; padding: 8px 0; gap: 0; }
   #app.rail .sidebar .nav-text, #app.rail .sidebar .pl-text, #app.rail .side-foot .who {
@@ -691,7 +698,7 @@ input[type="range"].slider:disabled { cursor: default; }
 
 @media (max-width: 760px) {
   #app, #app.with-queue { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; }
-  .resizer { display: none; }
+  .resizer, .panel-toggle { display: none; }
   .filter-input { padding-right: 16px; }
   .filter-count { display: none; }
   .sidebar { max-height: 32vh; padding: 12px 8px 8px; gap: 8px; }
@@ -731,6 +738,8 @@ input[type="range"].slider:disabled { cursor: default; }
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.3s-7.4-4.5-9.2-9C1.5 8 3.6 4.6 7.1 4.6c2 0 3.3 1 4.9 2.9 1.6-1.9 2.9-2.9 4.9-2.9 3.5 0 5.6 3.4 4.3 6.7-1.8 4.5-9.2 9-9.2 9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M12 20.3s-7.4-4.5-9.2-9C1.5 8 3.6 4.6 7.1 4.6c2 0 3.3 1 4.9 2.9 1.6-1.9 2.9-2.9 4.9-2.9 3.5 0 5.6 3.4 4.3 6.7-1.8 4.5-9.2 9-9.2 9z" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="i-queue" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h12"/><path d="M4 12h12"/><path d="M4 18h7"/><path d="M18 15v6"/><path d="M15 18h6"/></g></symbol>
+  <symbol id="i-panel-l" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15"/></g></symbol>
+  <symbol id="i-panel-r" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M14.5 4.5v15"/></g></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-album" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/></g></symbol>
@@ -784,6 +793,7 @@ input[type="range"].slider:disabled { cursor: default; }
 <div id="app" hidden>
   <aside class="sidebar glass" aria-label="Library">
     <div class="brand">Pane</div>
+    <button class="icon-btn panel-toggle" id="lib-toggle" type="button" aria-expanded="true" aria-label="Collapse your library" title="Collapse your library"><svg class="i"><use href="#i-panel-l"/></svg></button>
     <nav class="nav" aria-label="Views">
       <button class="nav-btn" type="button" data-view="home"><svg class="i"><use href="#i-home"/></svg><span class="nav-text">Home</span></button>
       <button class="nav-btn" type="button" data-view="liked"><svg class="i"><use href="#i-heart-fill"/></svg><span class="nav-text">Liked<span class="nav-long"> Songs</span></span></button>
@@ -941,6 +951,7 @@ input[type="range"].slider:disabled { cursor: default; }
   <div class="resizer" id="resize-l" role="separator" aria-orientation="vertical" aria-label="Resize your library" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <div class="resizer" id="resize-r" role="separator" aria-orientation="vertical" aria-label="Resize the queue" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <aside class="queue-panel glass" id="queue-panel" aria-labelledby="qp-title" hidden>
+    <button class="icon-btn panel-toggle" id="qp-close" type="button" aria-label="Close the queue" title="Close the queue"><svg class="i"><use href="#i-panel-r"/></svg></button>
     <div class="qp-head">
       <h2 class="brand" id="qp-title">Queue</h2>
       <span class="qp-sub" id="qp-sub"></span>
@@ -3132,7 +3143,12 @@ input[type="range"].slider:disabled { cursor: default; }
     const ul = $('qp-list');
     const p = queueParts();
     $('qp-sub').textContent = whereText();
-    if (!p.now && !p.up.length) { ul.replaceChildren(el('li', 'qp-note', 'Nothing playing. Pick a song and what’s coming up shows here.')); return; }
+    if (!p.now && !p.up.length) {
+      ul.replaceChildren(el('li', 'qp-note', state.resume && !state.pb
+        ? `Nothing playing. Press play to carry on with ${state.resume.name}.`
+        : 'Nothing playing. Pick a song and what’s coming up shows here.'));
+      return;
+    }
     const frag = document.createDocumentFragment();
     const row = (t, cls) => {
       const li = el('li');
@@ -3383,6 +3399,7 @@ input[type="range"].slider:disabled { cursor: default; }
       return;
     }
     if (!state.player) { toast('The player is still connecting.'); return; }
+    if (state.resume) { resumeLast().catch(handleError); return; }
     playCollection().catch(handleError);
   }
   async function remoteCommand(path, method, query) {
@@ -3496,6 +3513,7 @@ input[type="range"].slider:disabled { cursor: default; }
       album: (t.album && t.album.name) || '',
       albumUri: (t.album && t.album.uri) || '',
       images: (t.album && t.album.images) || [],
+      contextUri: (s.context && s.context.uri) || '',
       playing: !s.paused,
       position: s.position || 0,
       duration: s.duration || 0,
@@ -3521,6 +3539,7 @@ input[type="range"].slider:disabled { cursor: default; }
       albumUri: t && t.album ? (t.album.uri || '') : '',
       albumArtists: t && t.album && t.album.artists ? t.album.artists.map((a) => a.name).join(', ') : '',
       images: t ? ((t.album && t.album.images) || t.images || []) : [],
+      contextUri: (d.context && d.context.uri) || '',
       playing: !!d.is_playing,
       position: d.progress_ms || 0,
       duration: t ? (t.duration_ms || 0) : 0,
@@ -3801,6 +3820,50 @@ input[type="range"].slider:disabled { cursor: default; }
     setVolumeSlider(null);
     observe(null);
     if (had !== null) onTrackChanged(null);
+    showResume();
+  }
+  // ---------- carrying on where you left off ----------
+  // Spotify forgets what was playing once every device goes quiet, so Pane keeps the last
+  // song itself: what it was, how far in, and what it was playing from.
+  let lastSaved = { uri: null, playing: null, at: 0 };
+  function rememberPlayback(pb, force) {
+    if (!pb || !pb.uri) return;
+    const now = Date.now();
+    if (!force && pb.uri === lastSaved.uri && pb.playing === lastSaved.playing && now - lastSaved.at < 15000) return;
+    lastSaved = { uri: pb.uri, playing: pb.playing, at: now };
+    store.set('last', {
+      uri: pb.uri, name: pb.name, artists: pb.artists, art: pickImg(pb.images, 64), duration: pb.duration || 0,
+      position: Math.max(0, Math.round(currentPos())), contextUri: pb.contextUri || '',
+      album: pb.album || '', albumUri: pb.albumUri || '', at: now
+    });
+  }
+  function showResume() {
+    const r = store.get('last');
+    state.resume = r && r.uri ? r : null;
+    if (!state.resume) return;
+    $('now-title').textContent = r.name;
+    $('now-artist').textContent = r.artists;
+    setNowArt(r.art);
+    tintFrom(r.art);
+    if (panelShown()) renderQueuePanel();
+    $('play').disabled = false;
+    $('play').setAttribute('aria-label', `Carry on with ${r.name}`);
+    $('play').title = 'Carry on where you left off';
+    const d = Math.max(1, r.duration || 1);
+    $('seek').max = d; $('seek').value = Math.min(r.position, d); $('seek').style.setProperty('--p', (Math.min(r.position, d) / d * 100) + '%');
+    $('t-now').textContent = fmtTime(Math.min(r.position, d)); $('t-end').textContent = fmtTime(r.duration || 0);
+  }
+  function resumeLast() {
+    const r = state.resume;
+    if (!r) return Promise.resolve();
+    const t = { uri: r.uri, name: r.name, artists: r.artists, art: r.art, duration: r.duration };
+    // Liked Songs and some radio-like contexts can't be resumed by position: play the song on its own then.
+    const ctx = r.contextUri && /^spotify:(playlist|album|artist|show):/.test(r.contextUri);
+    const body = ctx ? { context_uri: r.contextUri, offset: { uri: r.uri }, position_ms: r.position } : { uris: [r.uri], position_ms: r.position };
+    return startPlayback(body, t).catch((e) => {
+      if (ctx && (e.status === 400 || e.status === 404) && !e.auth) return startPlayback({ uris: [r.uri], position_ms: r.position }, t);
+      throw e;
+    });
   }
   function setPlayback(pb) {
     if (!pb) {
@@ -3845,6 +3908,8 @@ input[type="range"].slider:disabled { cursor: default; }
     updateProgress();
     observe(pb);
     feedUpNext();
+    rememberPlayback(pb);
+    if (state.resume) { state.resume = null; $('play').removeAttribute('title'); }
     if (pb.uri !== state.currentUri) onTrackChanged(pb);
     else if (state.view && state.view.type === 'lyrics') syncLyrics(true);
   }
@@ -4672,6 +4737,7 @@ input[type="range"].slider:disabled { cursor: default; }
   function applyLayout(lay) {
     const st = $('app').style;
     $('app').classList.toggle('rail', !!lay.rail);
+    markLibToggle(!!lay.rail);
     if (lay.rail) st.setProperty('--side-l', RAIL_W + 'px');
     else if (lay.l) st.setProperty('--side-l', Math.min(lay.l, sideMax('l', lay)) + 'px');
     else st.removeProperty('--side-l');
@@ -4686,8 +4752,28 @@ input[type="range"].slider:disabled { cursor: default; }
       if (w) h.setAttribute('aria-valuenow', w);
     }
   }
+  function setRail(on) {
+    const next = Object.assign({}, getLayout(), { rail: on });
+    store.set('layout', next);
+    const app = $('app');
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      app.classList.add('animating');
+      clearTimeout(setRail.t);
+      setRail.t = setTimeout(() => { app.classList.remove('animating'); applyLayout(getLayout()); }, 220);
+    }
+    applyLayout(next);
+  }
+  function markLibToggle(rail) {
+    const b = $('lib-toggle');
+    const label = rail ? 'Expand your library' : 'Collapse your library';
+    b.setAttribute('aria-expanded', rail ? 'false' : 'true');
+    b.setAttribute('aria-label', label);
+    b.title = label;
+  }
   function wireResizers() {
     applyLayout(getLayout());
+    $('lib-toggle').addEventListener('click', () => setRail(!getLayout().rail));
+    $('qp-close').addEventListener('click', () => { setQueuePanel(false); $('queue-btn').focus(); });
     let fit = 0;
     window.addEventListener('resize', () => { cancelAnimationFrame(fit); fit = requestAnimationFrame(() => applyLayout(getLayout())); });
     for (const side of ['l', 'r']) {
@@ -5007,6 +5093,7 @@ input[type="range"].slider:disabled { cursor: default; }
         clearTimeout(state.pollTimer);
         state.pollTimer = null;
         state.hiddenAt = Date.now();
+        if (state.pb) rememberPlayback(state.pb, true);
         // Out of sight, Pane stops watching remote playback closely, so stop timing this song.
         if (state.obs && isRemote()) state.obs.ok = false;
         closeCtx();
