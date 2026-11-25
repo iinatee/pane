@@ -247,6 +247,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
     position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
   }
   #app.rail .side-foot { flex-direction: column; padding: 8px 0 0; }
+  #app.rail .pl-play { display: none; }
   #app.rail .look-pop { right: auto; width: 240px; }
 }
 
@@ -639,6 +640,18 @@ input[type="range"].slider:disabled { cursor: default; }
 .lib-chips .chip { flex: 1; min-width: 0; padding: 5px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pl-btn.new-pl .pl-cover { background: transparent; border: 1px dashed var(--faint); color: var(--muted); }
 .pl-cover.round { border-radius: 50%; }
+#playlists .lib-item { position: relative; }
+.pl-play {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 38px; border: 0; border-radius: var(--radius-sm); padding: 0;
+  display: grid; place-items: center; background: rgba(0, 0, 0, .5); color: #fff;
+  opacity: 0; transition: opacity .12s; cursor: pointer;
+}
+.pl-play.round { border-radius: 50%; }
+.pl-play svg.i { width: 18px; height: 18px; }
+#playlists .lib-item:hover .pl-play, .pl-play:focus-visible, .lib-item.ctx-on .pl-play { opacity: 1; }
+.lib-item.ctx-on .pl-name { color: var(--accent); }
+@media (hover: none) { .pl-play { opacity: .85; } }
 .lib-note { padding: 10px; font-size: 12px; color: var(--muted); display: grid; gap: 8px; justify-items: center; text-align: center; }
 
 /* Right-click menu */
@@ -2071,10 +2084,12 @@ input[type="range"].slider:disabled { cursor: default; }
       b.title = v.name;
       b.addEventListener('click', () => openView(playlistView(state.playlists.find((x) => x.id === v.id) || p)));
       li.appendChild(b);
+      addPlayButton(li, v.uri, v.name, false);
       frag.appendChild(li);
     }
     ul.appendChild(frag);
     if (state.view) markNav();
+    markPlayingContext(true);
   }
 
   // ---------- listening history (built from Spotify's recent plays) ----------
@@ -3103,12 +3118,20 @@ input[type="range"].slider:disabled { cursor: default; }
     queueFetch = api('/me/player/queue')
       .then((d) => {
         const now = d && d.currently_playing;
-        if (now && state.pb && now.uri !== state.pb.uri && queueRetries < 5) {
-          queueRetries++;
-          setTimeout(refreshQueue, 700);
+        // Just after playback starts, Spotify can still report nothing, or the song before.
+        // Keep asking for a little while (about 10 s in all) rather than show the wrong thing.
+        if (state.pb && state.pb.uri && (!now || now.uri !== state.pb.uri)) {
+          if (queueRetries < 8) {
+            queueRetries++;
+            setTimeout(refreshQueue, Math.min(2000, 500 + queueRetries * 200));
+            return;
+          }
+          queueRetries = 0;
+          state.queueStale = true;   // the next playback report tries again
           return;
         }
         queueRetries = 0;
+        state.queueStale = false;
         state.queueAt = Date.now();
         state.queue = d && d.currently_playing
           ? { now: normTrack(d.currently_playing), next: (d.queue || []).filter(Boolean).map((t) => normTrack(t)) }
@@ -3129,14 +3152,17 @@ input[type="range"].slider:disabled { cursor: default; }
   // What's coming up: the song playing, Pane's own queue (the song already passed to Spotify
   // first), then what Spotify says is next, without the passed-on song a second time.
   function queueParts() {
-    const q = state.queue;
+    // A queue for a different song than the one playing is out of date: show "loading" instead.
+    const q = state.queue && state.pb && state.pb.uri && state.queue.now.uri !== state.pb.uri ? null : state.queue;
     const handed = state.handed;
     const spotify = q ? q.next.map((t, k) => ({ t, k: k + 1 })) : [];
     if (handed) {
       const j = spotify.findIndex((x) => x.t.uri === handed.uri);
       if (j >= 0) spotify.splice(j, 1);
     }
-    return { now: q ? q.now : null, handed, up: getUpNext(), spotify };
+    const pb = state.pb;
+    const now = q ? q.now : (pb && pb.uri ? { uri: pb.uri, name: pb.name, artists: pb.artists, art: pickImg(pb.images, 64), duration: pb.duration, album: pb.album, albumUri: pb.albumUri || '', playable: true, key: '' } : null);
+    return { now, handed, up: getUpNext(), spotify, loading: !q && !!now };
   }
   const QUEUE_NOTE = 'Drag to reorder. Pane passes each song to Spotify shortly before the one playing ends, so keep Pane open.';
   function renderQueuePanel() {
@@ -3204,7 +3230,7 @@ input[type="range"].slider:disabled { cursor: default; }
         b.setAttribute('aria-label', `Skip to ${t.name}`);
       }
     }
-    frag.appendChild(el('li', 'qp-note', p.up.length ? QUEUE_NOTE
+    frag.appendChild(el('li', 'qp-note', p.loading ? 'Loading what’s next…' : p.up.length ? QUEUE_NOTE
       : p.spotify.length || p.handed ? 'Tap a song to skip to it. Right-click a song for more.'
         : 'Nothing queued after this. Add songs with the + button or by right-clicking any song.'));
     ul.replaceChildren(frag);
@@ -3257,7 +3283,7 @@ input[type="range"].slider:disabled { cursor: default; }
       for (const { t, k } of p.spotify) add(t, { kind: 'spotify', k });
       appendRows(seq(start, state.tracks.length));
     }
-    list.appendChild(el('li', 'list-note', p.up.length ? QUEUE_NOTE
+    list.appendChild(el('li', 'list-note', p.loading ? 'Loading what’s next…' : p.up.length ? QUEUE_NOTE
       : p.spotify.length || p.handed ? 'Tap a song to skip to it. Right-click a song for more.'
         : 'Nothing queued after this. Add songs with the + button or by right-clicking any song.'));
     setEmpty('');
@@ -3794,7 +3820,11 @@ input[type="range"].slider:disabled { cursor: default; }
     vol.style.setProperty('--p', v + '%');
   }
   function onTrackChanged(pb) {
+    // The song that was next has started: move the queue along now, then check with Spotify.
+    const q = state.queue;
+    if (pb && q && q.now.uri !== pb.uri && q.next[0] && q.next[0].uri === pb.uri) state.queue = { now: q.next[0], next: q.next.slice(1) };
     state.currentUri = pb ? pb.uri : null;
+    renderQueues();
     setNowArt(pb ? pickImg(pb.images, 64) : '');
     tintFrom(pb ? pickImg(pb.images, 64) : '');
     markPlayingRows();
@@ -3820,6 +3850,7 @@ input[type="range"].slider:disabled { cursor: default; }
     setVolumeSlider(null);
     observe(null);
     if (had !== null) onTrackChanged(null);
+    markPlayingContext();
     showResume();
   }
   // ---------- carrying on where you left off ----------
@@ -3909,6 +3940,12 @@ input[type="range"].slider:disabled { cursor: default; }
     observe(pb);
     feedUpNext();
     rememberPlayback(pb);
+    markPlayingContext();
+    // The queue didn't match the song playing: try again now that Spotify has reported in.
+    if (state.queueStale && !queueFetch && pb.uri && (!state.queue || state.queue.now.uri !== pb.uri) && Date.now() - (state.queueAt || 0) > 15000) {
+      state.queueAt = Date.now();
+      refreshQueue();
+    }
     if (state.resume) { state.resume = null; $('play').removeAttribute('title'); }
     if (pb.uri !== state.currentUri) onTrackChanged(pb);
     else if (state.view && state.view.type === 'lyrics') syncLyrics(true);
@@ -4298,7 +4335,43 @@ input[type="range"].slider:disabled { cursor: default; }
     text.append(el('span', 'pl-name', item.name), el('span', 'pl-owner', sub));
     b.appendChild(text);
     li.appendChild(b);
+    addPlayButton(li, item.uri, item.name, kind === 'artist');
     return { li, b };
+  }
+  // A play button over each cover in your library; it turns into pause for what's playing.
+  function addPlayButton(li, uri, name, round) {
+    if (!uri) return;
+    li.classList.add('lib-item');
+    li.dataset.ctx = uri;
+    const b = el('button', 'pl-play' + (round ? ' round' : ''));
+    b.type = 'button';
+    b.dataset.ctx = uri;
+    b.dataset.name = name;
+    b.setAttribute('aria-label', `Play ${name}`);
+    b.appendChild(icon('i-play'));
+    li.appendChild(b);
+  }
+  let ctxMark = '';
+  function markPlayingContext(force) {
+    const pb = state.pb;
+    const uri = pb && pb.contextUri ? pb.contextUri : '';
+    const key = uri + '|' + !!(pb && pb.playing);
+    if (!force && key === ctxMark) return;
+    ctxMark = key;
+    for (const li of $('playlists').querySelectorAll('.lib-item')) {
+      const on = !!uri && li.dataset.ctx === uri;
+      li.classList.toggle('ctx-on', on);
+      const b = li.querySelector('.pl-play');
+      const playing = on && pb.playing;
+      b.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} ${b.dataset.name}`);
+      const use = b.querySelector('use');
+      if (use) use.setAttribute('href', playing ? '#i-pause' : '#i-play');
+    }
+  }
+  function playFromLibrary(uri) {
+    activateIfHere();
+    if (state.pb && state.pb.contextUri === uri && (isLocal() || isRemote())) { togglePlayback(); return; }
+    startPlayback({ context_uri: uri }, null).catch(handleError);
   }
   function libNote(msg, action) {
     const li = el('li', 'lib-note');
@@ -4320,6 +4393,7 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     $('playlists').replaceChildren(frag);
     if (state.view) markNav();
+    markPlayingContext(true);
   }
   function renderArtists() {
     if (state.libTab !== 'artists') return;
@@ -4335,6 +4409,7 @@ input[type="range"].slider:disabled { cursor: default; }
       frag.appendChild(li);
     }
     $('playlists').replaceChildren(frag);
+    markPlayingContext(true);
   }
   async function loadAlbums(force) {
     if (state.albumsLoading || (!force && state.albumsAt && Date.now() - state.albumsAt < 30 * 60e3)) return;
@@ -4389,6 +4464,10 @@ input[type="range"].slider:disabled { cursor: default; }
     }
   }
   function wireLibrary() {
+    $('playlists').addEventListener('click', (e) => {
+      const b = e.target.closest('.pl-play');
+      if (b) { e.stopPropagation(); playFromLibrary(b.dataset.ctx); }
+    });
     for (const c of document.querySelectorAll('.chip[data-lib]')) c.addEventListener('click', () => setLibTab(c.dataset.lib));
     $('name-form').addEventListener('submit', (e) => {
       e.preventDefault();
