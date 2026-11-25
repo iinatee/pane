@@ -202,7 +202,9 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   height: 100vh; height: 100dvh;
   display: grid;
   --side: clamp(220px, 20vw, 290px);
-  grid-template-columns: var(--side) minmax(0, 1fr);
+  --side-l: var(--side);
+  --side-r: var(--side);
+  grid-template-columns: var(--side-l) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 14px;
   padding-block: max(14px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-bottom, 0px));
@@ -210,7 +212,36 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   padding-right: max(14px, env(safe-area-inset-right, 0px));
 }
 
-#app.with-queue { grid-template-columns: var(--side) minmax(0, 1fr) var(--side); }
+#app.with-queue { grid-template-columns: var(--side-l) minmax(0, 1fr) var(--side-r); }
+
+/* Drag handles between the panels */
+.resizer {
+  position: absolute; grid-row: 1 / 2; top: 0; bottom: 0; width: 14px; z-index: 5;
+  cursor: col-resize; touch-action: none; outline: none;
+}
+#resize-l { grid-column: 1 / 2; right: -14px; }
+#resize-r { grid-column: 3 / 4; left: -14px; }
+#app:not(.with-queue) #resize-r { display: none; }
+.resizer::after {
+  content: ""; position: absolute; left: 6px; top: 18%; bottom: 18%; width: 2px; border-radius: 2px;
+  background: transparent; transition: background-color .15s;
+}
+.resizer:hover::after, .resizer:focus-visible::after, .resizer.active::after { background: color-mix(in srgb, var(--fg) 28%, transparent); }
+#app.resizing, #app.resizing * { cursor: col-resize !important; user-select: none; }
+#app.resizing * { transition: none !important; }
+.queue-panel.closing { opacity: .45; }
+
+/* The library folded down to a strip of icons */
+@media (min-width: 761px) {
+  #app.rail .sidebar { padding: 18px 8px 12px; }
+  #app.rail .sidebar .brand, #app.rail .lib-chips { display: none; }
+  #app.rail .sidebar .nav-btn, #app.rail .sidebar .pl-btn { justify-content: center; padding: 8px 0; gap: 0; }
+  #app.rail .sidebar .nav-text, #app.rail .sidebar .pl-text, #app.rail .side-foot .who {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  #app.rail .side-foot { flex-direction: column; padding: 8px 0 0; }
+  #app.rail .look-pop { right: auto; width: 240px; }
+}
 
 /* Sidebar */
 .sidebar { display: flex; flex-direction: column; min-height: 0; padding: 18px 12px 12px; gap: 14px; }
@@ -270,7 +301,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .qp-note { padding: 10px; font-size: 12px; color: var(--faint); text-align: center; }
 
 /* Main */
-.main { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 22px 14px 8px; }
+.main { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 22px 14px 8px; container: main / inline-size; }
 .view-head { display: flex; align-items: center; gap: 16px; padding: 0 10px 14px; }
 .head-tile {
   width: 72px; height: 72px; border-radius: var(--radius-md); flex: none;
@@ -339,7 +370,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .list { list-style: none; margin: 0; padding: 0; }
 .row {
   display: grid; align-items: center; gap: 8px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, .65fr) auto auto 3.4rem;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto auto 3.4rem;
   padding: 5px 8px; border-radius: 14px;
   transition: background-color .12s;
   content-visibility: auto; contain-intrinsic-size: auto 52px;
@@ -359,6 +390,34 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .row-text { min-width: 0; display: grid; }
 .row-title, .row-artist, .row-album { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-title { font-weight: 600; }
+.row-added { display: none; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list.show-added .row, .list-head.show-added { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(6.5rem, .5fr) auto auto 3.4rem; }
+.list.show-added .row-added { display: block; }
+.list-head {
+  display: grid; align-items: center; gap: 8px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto auto 3.4rem;
+  margin: 0 0 6px; padding: 0 8px 6px; border-bottom: 1px solid var(--rim);
+}
+.list-head .lh-cell {
+  display: flex; align-items: center; gap: 4px; min-width: 0; padding: 4px 0; border: 0; background: none;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--faint); text-align: left; cursor: pointer;
+}
+.list-head .lh-cell:hover, .list-head .lh-cell.active { color: var(--fg); }
+.list-head .lh-title { padding-left: 54px; }
+.list-head .lh-added { display: none; }
+.list-head.show-added .lh-added { display: flex; }
+.list-head .lh-time { justify-content: flex-end; padding-right: 4px; }
+.list-head .lh-time svg.i { width: 16px; height: 16px; }
+.list-head .lh-slot { visibility: hidden; height: 1px; }
+.lh-arrow { font-size: 10px; }
+@container main (max-width: 860px) {
+  .list.show-added .row, .list-head.show-added { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto auto 3.4rem; }
+  .list.show-added .row-added, .list-head.show-added .lh-added { display: none; }
+}
+@container main (max-width: 620px) {
+  .row, .list.show-added .row, .list-head, .list-head.show-added { grid-template-columns: minmax(0, 1fr) auto auto 3.2rem; }
+  .row-album, .list-head .lh-album { display: none; }
+}
 .row-artist, .row-album { color: var(--muted); font-size: 13px; }
 .row-time { text-align: right; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; padding-right: 4px; }
 .row .queue-btn { opacity: 0; }
@@ -458,9 +517,11 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 
 /* Lyrics */
 .lyrics { padding: 6px 12px 40vh; text-align: center; }
+.lyrics .ly-line { padding: 8px 0; }
 .ly-line {
   margin: 0; padding: 6px 0;
-  font: 600 clamp(20px, 2.1vw, 26px)/1.35 var(--font-display); letter-spacing: -.01em;
+  font: 700 clamp(24px, 2.4vw, 38px)/1.3 var(--font-display); letter-spacing: -.015em;
+  font-size: clamp(24px, 3.7cqi, 40px);
   color: var(--faint); transition: color .35s ease;
   text-wrap: balance;
 }
@@ -624,15 +685,13 @@ input[type="range"].slider:disabled { cursor: default; }
 
 /* Narrow */
 @media (max-width: 1180px) {
-  #app.with-queue { grid-template-columns: var(--side) minmax(0, 1fr); }
-  .queue-panel { display: none !important; }
+  #app.with-queue { grid-template-columns: var(--side-l) minmax(0, 1fr); }
+  .queue-panel, #resize-r { display: none !important; }
 }
-@media (max-width: 1000px) {
-  .row { grid-template-columns: minmax(0, 1fr) auto auto 3.2rem; }
-  .row-album { display: none; }
-}
+
 @media (max-width: 760px) {
   #app, #app.with-queue { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; }
+  .resizer { display: none; }
   .filter-input { padding-right: 16px; }
   .filter-count { display: none; }
   .sidebar { max-height: 32vh; padding: 12px 8px 8px; gap: 8px; }
@@ -726,10 +785,10 @@ input[type="range"].slider:disabled { cursor: default; }
   <aside class="sidebar glass" aria-label="Library">
     <div class="brand">Pane</div>
     <nav class="nav" aria-label="Views">
-      <button class="nav-btn" type="button" data-view="home"><svg class="i"><use href="#i-home"/></svg>Home</button>
-      <button class="nav-btn" type="button" data-view="liked"><svg class="i"><use href="#i-heart-fill"/></svg><span>Liked<span class="nav-long"> Songs</span></span></button>
-      <button class="nav-btn" type="button" data-view="recent"><svg class="i"><use href="#i-clock"/></svg>Recent</button>
-      <button class="nav-btn" type="button" data-view="search"><svg class="i"><use href="#i-search"/></svg>Search</button>
+      <button class="nav-btn" type="button" data-view="home"><svg class="i"><use href="#i-home"/></svg><span class="nav-text">Home</span></button>
+      <button class="nav-btn" type="button" data-view="liked"><svg class="i"><use href="#i-heart-fill"/></svg><span class="nav-text">Liked<span class="nav-long"> Songs</span></span></button>
+      <button class="nav-btn" type="button" data-view="recent"><svg class="i"><use href="#i-clock"/></svg><span class="nav-text">Recent</span></button>
+      <button class="nav-btn" type="button" data-view="search"><svg class="i"><use href="#i-search"/></svg><span class="nav-text">Search</span></button>
     </nav>
     <div class="chips lib-chips" role="group" aria-label="Your library">
       <button class="chip" type="button" data-lib="playlists" aria-pressed="true">Playlists</button>
@@ -865,12 +924,22 @@ input[type="range"].slider:disabled { cursor: default; }
         </section>
       </div>
       <div class="lyrics" id="lyrics" hidden></div>
+      <div class="list-head" id="list-head" role="group" aria-label="Sort by column" hidden>
+        <button class="lh-cell lh-title" type="button" data-sort="title">Title</button>
+        <button class="lh-cell lh-album" type="button" data-sort="album">Album</button>
+        <button class="lh-cell lh-added" type="button" data-sort="added">Date added</button>
+        <span class="icon-btn lh-slot" aria-hidden="true"></span>
+        <span class="icon-btn lh-slot" aria-hidden="true"></span>
+        <button class="lh-cell lh-time" type="button" data-sort="duration" aria-label="Sort by length" title="Sort by length"><svg class="i"><use href="#i-clock"/></svg></button>
+      </div>
       <ul class="list" id="list"></ul>
       <p class="empty" id="empty" hidden></p>
       <p class="loading-more" id="loading" hidden>Loading…</p>
     </div>
   </section>
 
+  <div class="resizer" id="resize-l" role="separator" aria-orientation="vertical" aria-label="Resize your library" tabindex="0" title="Drag to resize · double-click to reset"></div>
+  <div class="resizer" id="resize-r" role="separator" aria-orientation="vertical" aria-label="Resize the queue" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <aside class="queue-panel glass" id="queue-panel" aria-labelledby="qp-title" hidden>
     <div class="qp-head">
       <h2 class="brand" id="qp-title">Queue</h2>
@@ -1346,6 +1415,7 @@ input[type="range"].slider:disabled { cursor: default; }
       return;
     }
     $('list').classList.toggle('in-queue', t === 'queue');
+    renderListHead();
     if (t === 'queue') {
       setHeadTile('', VIEW_ICON.queue);
       $('view-title').textContent = 'Queue';
@@ -1447,7 +1517,46 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     return idx;
   }
+  // Column headings over Liked Songs, playlists and albums; clicking one sorts by it.
+  const ADDED_FMT = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function fmtAdded(ms) {
+    const days = Math.floor((Date.now() - ms) / DAY);
+    if (days < 1) return 'Today';
+    if (days < 2) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    if (days < 28) return `${Math.floor(days / 7)} week${days < 14 ? '' : 's'} ago`;
+    return ADDED_FMT.format(ms);
+  }
+  function renderListHead() {
+    const v = state.view;
+    const head = $('list-head');
+    const on = !!(v && (v.type === 'liked' || v.type === 'playlist' || v.type === 'album'));
+    const added = !!(v && (v.type === 'liked' || v.type === 'playlist'));
+    head.hidden = !on;
+    head.classList.toggle('show-added', added);
+    $('list').classList.toggle('show-added', added);
+    if (!on) return;
+    for (const b of head.querySelectorAll('[data-sort]')) {
+      const k = b.dataset.sort;
+      const active = k === 'added' ? state.sort.startsWith('added') : state.sort === k;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      const old = b.querySelector('.lh-arrow');
+      if (old) old.remove();
+      if (active) b.appendChild(el('span', 'lh-arrow', k === 'added' && state.sort === 'added-asc' ? '▲' : '▼'));
+    }
+  }
+  function sortByHeading(k) {
+    const v = state.view;
+    const def = v.type === 'liked' ? 'added-desc' : 'custom';
+    let next;
+    if (k === 'added') next = state.sort === 'added-desc' ? 'added-asc' : state.sort === 'added-asc' ? def : 'added-desc';
+    else next = state.sort === k ? def : k;
+    if (v.type === 'liked' && next === 'custom') next = 'added-desc';
+    applySort(next);
+  }
   function renderList() {
+    renderListHead();
     state.order = visibleIndices();
     state.rendered = 0;
     $('list').replaceChildren();
@@ -1469,10 +1578,16 @@ input[type="range"].slider:disabled { cursor: default; }
     // Only check hearts for songs actually drawn.
     checkSaved(chunk.map((i) => state.tracks[i]), state.view.type === 'liked');
   }
+  function fmtRun(ms) {
+    const mins = Math.round(ms / 60000), h = Math.floor(mins / 60);
+    return h ? `${fmtNum(h)} hr ${mins % 60} min` : `${mins} min`;
+  }
   function setListSub(total) {
     if (total == null) return;
-    if (state.view.type === 'liked') $('view-sub').textContent = fmtCount(total, 'song');
-    if (state.view.type === 'playlist' || state.view.type === 'album') $('view-sub').textContent = [state.view.owner, fmtCount(total, 'song')].filter(Boolean).join(' · ');
+    // Once the whole list is here, add how long it runs.
+    const run = state.complete && state.tracks.length === total && total ? fmtRun(state.tracks.reduce((a, t) => a + (t.duration || 0), 0)) : '';
+    if (state.view.type === 'liked') $('view-sub').textContent = [fmtCount(total, 'song'), run].filter(Boolean).join(' · ');
+    if (state.view.type === 'playlist' || state.view.type === 'album') $('view-sub').textContent = [state.view.owner, fmtCount(total, 'song'), run].filter(Boolean).join(' · ');
   }
   function showTracks(tracks, total, complete) {
     const sameStart = state.tracks.length && tracks.length >= state.tracks.length &&
@@ -1799,7 +1914,7 @@ input[type="range"].slider:disabled { cursor: default; }
       q.setAttribute('aria-label', `Add ${t.name} to queue`);
       q.appendChild(icon('i-queue'));
 
-      li.append(play, el('span', 'row-album', t.album), heart, q, el('span', 'row-time', t.duration ? fmtTime(t.duration) : ''));
+      li.append(play, el('span', 'row-album', t.album), el('span', 'row-added', t.added ? fmtAdded(t.added) : ''), heart, q, el('span', 'row-time', t.duration ? fmtTime(t.duration) : ''));
       frag.appendChild(li);
     }
     $('list').appendChild(frag);
@@ -1911,6 +2026,7 @@ input[type="range"].slider:disabled { cursor: default; }
     const b = el('button', 'pl-btn new-pl');
     b.type = 'button';
     b.id = 'new-pl';
+    b.title = 'New playlist';
     const c = el('span', 'pl-cover');
     c.appendChild(icon('i-plus'));
     const text = el('span', 'pl-text');
@@ -1941,6 +2057,7 @@ input[type="range"].slider:disabled { cursor: default; }
       text.append(el('span', 'pl-name', v.name), el('span', 'pl-owner', v.owner));
       b.appendChild(text);
       b.dataset.kind = 'playlist';
+      b.title = v.name;
       b.addEventListener('click', () => openView(playlistView(state.playlists.find((x) => x.id === v.id) || p)));
       li.appendChild(b);
       frag.appendChild(li);
@@ -2961,6 +3078,7 @@ input[type="range"].slider:disabled { cursor: default; }
   function setQueuePanel(open) {
     $('queue-panel').hidden = !open;
     $('app').classList.toggle('with-queue', open);
+    applyLayout(getLayout());
     store.set('queuePanel', open);
     markQueueBtn();
     if (open) refreshQueue();
@@ -4107,6 +4225,7 @@ input[type="range"].slider:disabled { cursor: default; }
     b.type = 'button';
     b.dataset.id = item.id;
     b.dataset.kind = kind;
+    b.title = item.name;
     const round = kind === 'artist' ? ' round' : '';
     if (item.image) b.appendChild(imgEl(item.image, 'pl-cover' + round));
     else { const c = el('span', 'pl-cover' + round); c.appendChild(icon(kind === 'artist' ? 'i-user' : 'i-album')); b.appendChild(c); }
@@ -4533,6 +4652,126 @@ input[type="range"].slider:disabled { cursor: default; }
     state.obs = pb && pb.uri ? { uri: pb.uri, ms: 0, pos, seen: nowMs, playing: pb.playing, ok: !document.hidden || pb.source === 'local', dur: pb.duration || 0 } : null;
   }
 
+  // ---------- resizable panels ----------
+  // Drag the edge of the library or the queue. Narrow enough, the library folds into a strip
+  // of icons and the queue closes. Sizes are kept; double-click a handle to go back to normal.
+  // Only the grid's column widths change, at most once a frame.
+  const RAIL_W = 76, MAIN_MIN = 420, GAP = 14;
+  const LIMITS = { l: [200, 440], r: [240, 480] };
+  function getLayout() {
+    const s = store.get('layout');
+    return s && typeof s === 'object' ? s : {};
+  }
+  function sideMax(side, lay) {
+    const other = side === 'l'
+      ? ($('app').classList.contains('with-queue') && wideQueue.matches ? $('queue-panel').getBoundingClientRect().width + GAP : 0)
+      : (lay.rail ? RAIL_W : $('app').querySelector('.sidebar').getBoundingClientRect().width) + GAP;
+    const room = innerWidth - 2 * GAP - GAP - other - MAIN_MIN;
+    return Math.max(LIMITS[side][0], Math.min(LIMITS[side][1], room));
+  }
+  function applyLayout(lay) {
+    const st = $('app').style;
+    $('app').classList.toggle('rail', !!lay.rail);
+    if (lay.rail) st.setProperty('--side-l', RAIL_W + 'px');
+    else if (lay.l) st.setProperty('--side-l', Math.min(lay.l, sideMax('l', lay)) + 'px');
+    else st.removeProperty('--side-l');
+    if (lay.r) st.setProperty('--side-r', Math.min(lay.r, sideMax('r', lay)) + 'px');
+    else st.removeProperty('--side-r');
+    for (const side of ['l', 'r']) {
+      const h = $('resize-' + side);
+      h.setAttribute('aria-valuemin', side === 'l' ? RAIL_W : LIMITS.r[0]);
+      h.setAttribute('aria-valuemax', LIMITS[side][1]);
+      const panel = side === 'l' ? $('app').querySelector('.sidebar') : $('queue-panel');
+      const w = Math.round(panel.getBoundingClientRect().width);
+      if (w) h.setAttribute('aria-valuenow', w);
+    }
+  }
+  function wireResizers() {
+    applyLayout(getLayout());
+    let fit = 0;
+    window.addEventListener('resize', () => { cancelAnimationFrame(fit); fit = requestAnimationFrame(() => applyLayout(getLayout())); });
+    for (const side of ['l', 'r']) {
+      const h = $('resize-' + side);
+      const panel = side === 'l' ? $('app').querySelector('.sidebar') : $('queue-panel');
+      let startX = 0, startW = 0, lastX = 0, frame = 0, lay = null, closing = false;
+      // Work out the new size for a drag of dx pixels (outwards from the middle is positive).
+      const sizeFor = (w) => {
+        const next = Object.assign({}, lay);
+        closing = false;
+        if (side === 'l') {
+          if (w < 150) next.rail = true;
+          else { next.rail = false; next.l = Math.round(Math.max(LIMITS.l[0], Math.min(w, sideMax('l', next)))); }
+        } else {
+          closing = w < 170;
+          next.r = Math.round(Math.max(LIMITS.r[0], Math.min(w, sideMax('r', next))));
+        }
+        return next;
+      };
+      h.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        h.setPointerCapture(e.pointerId);
+        startX = lastX = e.clientX;
+        startW = panel.getBoundingClientRect().width;
+        lay = getLayout();
+        $('app').classList.add('resizing');
+        h.classList.add('active');
+        closeCtx();
+      });
+      h.addEventListener('pointermove', (e) => {
+        if (!h.hasPointerCapture(e.pointerId)) return;
+        lastX = e.clientX;
+        if (frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          const w = startW + (side === 'l' ? lastX - startX : startX - lastX);
+          const next = sizeFor(w);
+          applyLayout(next);
+          if (side === 'r') panel.classList.toggle('closing', closing);
+        });
+      });
+      const end = (e) => {
+        if (!h.hasPointerCapture(e.pointerId)) return;
+        h.releasePointerCapture(e.pointerId);
+        cancelAnimationFrame(frame);
+        frame = 0;
+        $('app').classList.remove('resizing');
+        h.classList.remove('active');
+        panel.classList.remove('closing');
+        if (Math.abs(lastX - startX) < 2) return;
+        const next = sizeFor(startW + (side === 'l' ? lastX - startX : startX - lastX));
+        if (side === 'r' && closing) { applyLayout(lay); setQueuePanel(false); return; }
+        store.set('layout', next);
+        applyLayout(next);
+      };
+      h.addEventListener('pointerup', end);
+      h.addEventListener('pointercancel', end);
+      h.addEventListener('dblclick', () => {
+        const next = Object.assign({}, getLayout());
+        if (side === 'l') { delete next.l; delete next.rail; } else delete next.r;
+        store.set('layout', next);
+        applyLayout(next);
+      });
+      h.addEventListener('keydown', (e) => {
+        const cur = getLayout();
+        const w = panel.getBoundingClientRect().width;
+        let next = null;
+        const grow = side === 'l' ? 'ArrowRight' : 'ArrowLeft', shrink = side === 'l' ? 'ArrowLeft' : 'ArrowRight';
+        lay = cur;
+        if (e.key === grow) next = sizeFor(Math.max(w, side === 'l' && cur.rail ? LIMITS.l[0] - 20 : w) + 20);
+        else if (e.key === shrink) next = sizeFor(Math.max(side === 'l' ? 0 : LIMITS.r[0], w - 20));
+        else if (e.key === 'Home') next = side === 'l' ? Object.assign({}, cur, { rail: true }) : sizeFor(LIMITS.r[0]);
+        else if (e.key === 'End') next = sizeFor(LIMITS[side][1]);
+        else if (e.key === 'Enter' && side === 'l') next = Object.assign({}, cur, { rail: !cur.rail });
+        if (!next) return;
+        e.preventDefault();
+        closing = false;
+        store.set('layout', next);
+        applyLayout(next);
+      });
+    }
+  }
+
   // ---------- wiring ----------
   function wire() {
     for (const b of document.querySelectorAll('.nav-btn')) {
@@ -4619,6 +4858,8 @@ input[type="range"].slider:disabled { cursor: default; }
     }, (from, before) => { if (state.view.type === 'queue') queueMove(from, before); else movePlaylistItem(from, before); });
     wireMenus();
     wireLibrary();
+    wireResizers();
+    $('list-head').addEventListener('click', (e) => { const b = e.target.closest('[data-sort]'); if (b) sortByHeading(b.dataset.sort); });
     sortMenu = makeMenu($('sort-btn').parentElement, applySort);
     setSortUI(state.sort);
     rangeMenu = makeMenu($('range-wrap'), (value) => {
