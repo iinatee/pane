@@ -3111,6 +3111,17 @@ input[type="range"].slider:disabled { cursor: default; }
   }
   let queueFetch = null;
   let queueRetries = 0;
+  // Something changed what plays next without changing the song (shuffle, repeat, a new
+  // playlist starting on the same song). Don't trust the queue until Spotify has caught up.
+  function queueChanged() {
+    state.queueDirtyUntil = Date.now() + 2800;
+    clearTimeout(queueChanged.a);
+    clearTimeout(queueChanged.b);
+    if (!queueVisible()) { state.queue = null; return; }
+    queueChanged.a = setTimeout(refreshQueue, 1000);
+    queueChanged.b = setTimeout(refreshQueue, 2800);
+  }
+  const queueTrusted = () => !!state.queue && Date.now() > (state.queueDirtyUntil || 0) && !state.queueStale;
   function refreshQueue() {
     if (!queueVisible()) return Promise.resolve();
     if (queueFetch) return queueFetch;
@@ -3294,23 +3305,39 @@ input[type="range"].slider:disabled { cursor: default; }
     const t = state.tracks[i];
     if (!m || !t) return Promise.resolve();
     if (m.kind === 'up') return playUpNow(m.k);
-    if (m.kind === 'spotify') return skipTo(m.k, t.name);
+    if (m.kind === 'spotify') return skipTo(m.k, t.name, t.uri);
     if (m.kind === 'handed') return skipToHanded();
     return Promise.resolve();
   }
   function skipToHanded() {
     const q = state.queue;
     const k = q && state.handed ? q.next.findIndex((x) => x.uri === state.handed.uri) : -1;
-    return k >= 0 ? skipTo(k + 1, q.next[k].name) : skipNext();
+    return k >= 0 ? skipTo(k + 1, q.next[k].name, q.next[k].uri) : skipNext();
   }
-  async function skipTo(count, name) {
+  async function skipTo(count, name, uri) {
     if (count < 1 || remoteBlocked()) return;
     const q = state.queue;
-    const prev = q && q.next[count - 1] && q.next[count - 1].name === name ? expectTrack(q.next[count - 1]) : state.pb;
+    const target = q && q.next[count - 1];
+    const want = uri || (target && target.uri) || '';
+    const prev = target && target.uri === want ? expectTrack(target) : state.pb;
     if (prev === state.pb) toast(`Skipping to ${name}`);
     try {
-      // Spotify has no "jump to" for the queue, so skip forward one song at a time.
-      for (let k = 0; k < count; k++) await api('/me/player/next', { method: 'POST', query: targetQuery() });
+      // Spotify has no "jump to" for the queue, so skip forward one song at a time. The queue may
+      // have been reordered since it was shown (shuffle, another device), so first check where the
+      // song is now, rather than trusting its old position.
+      let n = count;
+      if (want) {
+        const d = await api('/me/player/queue');
+        const k = d && Array.isArray(d.queue) ? d.queue.findIndex((t) => t && t.uri === want) : -1;
+        if (k < 0) {
+          revertTo(prev);
+          toast(`${name} isn’t in the queue any more.`);
+          queueChanged();
+          return;
+        }
+        n = k + 1;
+      }
+      for (let k = 0; k < n; k++) await api('/me/player/next', { method: 'POST', query: targetQuery() });
     } catch (e) {
       revertTo(prev);
       handleError(e);
@@ -3382,6 +3409,7 @@ input[type="range"].slider:disabled { cursor: default; }
         if (e.status !== 404) throw e;
         toast(`${state.pb ? state.pb.device.name : 'That device'} isn't responding. Open Spotify there, or pick another device from the speaker menu.`);
       }
+      queueChanged();
       pollSoon(400);
       return;
     }
@@ -3396,6 +3424,7 @@ input[type="range"].slider:disabled { cursor: default; }
         await api('/me/player', { method: 'PUT', body: { device_ids: [state.deviceId], play: false } });
         await api('/me/player/play', { method: 'PUT', query: { device_id: state.deviceId }, body });
       }
+      queueChanged();
     } catch (e) {
       revertTo(prev);
       throw e;
@@ -3405,7 +3434,7 @@ input[type="range"].slider:disabled { cursor: default; }
     // Pane's own queue comes first, as it would in Spotify.
     if (getUpNext().length && !state.handed && state.pb && !remoteBlocked()) await handOver();
     const q = state.queue;
-    const target = state.handed || (q && state.pb && q.now.uri === state.pb.uri && q.next[0]) || null;
+    const target = state.handed || (queueTrusted() && state.pb && q.now.uri === state.pb.uri && q.next[0]) || null;
     const prev = target ? expectTrack(target) : state.pb;
     if (isLocal()) { state.player.nextTrack().catch(() => revertTo(prev)); return; }
     if (isRemote()) remoteCommand('/me/player/next', 'POST');
@@ -3415,10 +3444,13 @@ input[type="range"].slider:disabled { cursor: default; }
     if (isRemote()) {
       if (remoteBlocked()) return;
       const pb = state.pb;
+      holdMode('playing', !pb.playing);
+      setPlayback(Object.assign({}, pb, { playing: !pb.playing, position: currentPos() }));
       try {
         await api(pb.playing ? '/me/player/pause' : '/me/player/play', { method: 'PUT' });
-        setPlayback(Object.assign({}, pb, { playing: !pb.playing, position: currentPos() }));
       } catch (e) {
+        if (state.holds) delete state.holds.playing;
+        setPlayback(pb);
         handleError(e);
       }
       pollSoon();
@@ -3896,7 +3928,23 @@ input[type="range"].slider:disabled { cursor: default; }
       throw e;
     });
   }
+  // A change you just made (shuffle, repeat, play/pause) wins over Spotify's reports for a
+  // few seconds, since Spotify can take a moment to catch up and would otherwise flick it back.
+  function holdMode(key, value) {
+    if (!state.holds) state.holds = {};
+    state.holds[key] = { value, until: Date.now() + 3500 };
+  }
+  function applyHolds(pb) {
+    const h = state.holds;
+    if (!h || !pb) return pb;
+    for (const key of Object.keys(h)) {
+      if (Date.now() > h[key].until) { delete h[key]; continue; }
+      if (pb[key] !== h[key].value) pb = Object.assign({}, pb, { [key]: h[key].value });
+    }
+    return pb;
+  }
   function setPlayback(pb) {
+    pb = applyHolds(pb);
     if (!pb) {
       renderIdle(state.deviceId ? 'Ready. Pick a song to start.' : null);
       return;
@@ -5012,7 +5060,7 @@ input[type="range"].slider:disabled { cursor: default; }
       const q = state.queue;
       if (!b || !q) return;
       const k = +b.dataset.q;
-      if (k > 0) skipTo(k, q.next[k - 1].name);
+      if (k > 0) skipTo(k, q.next[k - 1].name, q.next[k - 1].uri);
     });
     makeSortable($('qp-list'), (li) => (li.dataset.up != null ? +li.dataset.up : null), queueMove);
     makeSortable($('list'), (li) => {
@@ -5073,17 +5121,21 @@ input[type="range"].slider:disabled { cursor: default; }
       else if (isRemote()) remoteCommand('/me/player/previous', 'POST');
     });
     $('next').addEventListener('click', skipNext);
+    // Shuffle and repeat change what plays next, so the queue is reloaded once Spotify has caught up.
+    const setMode = (key, value, path) => {
+      if (!state.pb || remoteBlocked()) return;
+      holdMode(key, value);
+      setPlayback(Object.assign({}, state.pb, { [key]: value, position: currentPos() }));
+      queueChanged();
+      api(path, { method: 'PUT', query: Object.assign({ state: String(value) }, targetQuery()) })
+        .catch((e) => { if (state.holds) delete state.holds[key]; handleError(e); })
+        .finally(() => { if (isRemote()) pollSoon(400); });
+    };
     $('shuffle').addEventListener('click', () => {
-      if (!state.pb) return;
-      const on = !state.pb.shuffle;
-      if (isRemote()) { setPlayback(Object.assign({}, state.pb, { shuffle: on, position: currentPos() })); remoteCommand('/me/player/shuffle', 'PUT', { state: String(on) }); }
-      else api('/me/player/shuffle', { method: 'PUT', query: Object.assign({ state: String(on) }, targetQuery()) }).catch(handleError);
+      if (state.pb) setMode('shuffle', !state.pb.shuffle, '/me/player/shuffle');
     });
     $('repeat').addEventListener('click', () => {
-      if (!state.pb) return;
-      const nextMode = { off: 'context', context: 'track', track: 'off' }[state.pb.repeat] || 'off';
-      if (isRemote()) { setPlayback(Object.assign({}, state.pb, { repeat: nextMode, position: currentPos() })); remoteCommand('/me/player/repeat', 'PUT', { state: nextMode }); }
-      else api('/me/player/repeat', { method: 'PUT', query: Object.assign({ state: nextMode }, targetQuery()) }).catch(handleError);
+      if (state.pb) setMode('repeat', { off: 'context', context: 'track', track: 'off' }[state.pb.repeat] || 'off', '/me/player/repeat');
     });
     $('device-btn').addEventListener('click', (e) => {
       e.stopPropagation();
