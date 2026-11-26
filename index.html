@@ -1425,6 +1425,8 @@ input[type="range"].slider:disabled { cursor: default; }
     $('filter-count').textContent = '';
     $('filter-wrap').hidden = !(t === 'liked' || t === 'playlist' || t === 'album');
     $('filter').placeholder = t === 'liked' ? 'Find a song or artist in Liked Songs' : t === 'album' ? 'Find a song on this album' : 'Find a song or artist in this playlist';
+    $('list').classList.toggle('in-queue', t === 'queue');
+    renderListHead();
 
     if (t === 'home') {
       setHeadTile('', VIEW_ICON.home);
@@ -1438,8 +1440,6 @@ input[type="range"].slider:disabled { cursor: default; }
       loadLyrics();
       return;
     }
-    $('list').classList.toggle('in-queue', t === 'queue');
-    renderListHead();
     if (t === 'queue') {
       setHeadTile('', VIEW_ICON.queue);
       $('view-title').textContent = 'Queue';
