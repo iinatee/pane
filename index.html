@@ -248,6 +248,13 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   }
   #app.rail .side-foot { flex-direction: column; padding: 8px 0 0; }
   #app.rail .pl-play { display: none; }
+  #app.qrail .queue-panel { padding: 12px 8px 12px; }
+  #app.qrail .queue-panel .qp-head, #app.qrail .qp-list .section-label, #app.qrail .qp-list .qp-note, #app.qrail .qp-list .up-remove { display: none; }
+  #app.qrail .queue-panel .panel-toggle { position: static; align-self: center; flex: none; }
+  #app.qrail .qp-list .pl-btn, #app.qrail .qp-list .up-item .pl-btn { justify-content: center; padding: 6px 0; gap: 0; }
+  #app.qrail .qp-list .pl-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  #app.qrail .qp-list .q-row.is-current .pl-cover { box-shadow: 0 0 0 2px var(--accent); }
+  #app.qrail .qp-list .q-row.is-current { margin-bottom: 8px; }
   #app.rail .look-pop { right: auto; width: 240px; }
 }
 
@@ -273,7 +280,13 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
   margin: 4px 10px 0; font-size: 11px; font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase; color: var(--faint);
 }
-.playlists { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; display: grid; align-content: start; gap: 2px; }
+.playlists {
+  list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; display: grid; align-content: start; gap: 2px;
+  scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--fg) 22%, transparent) transparent;
+}
+/* Where a scrollbar would cut names short, it goes; the list still scrolls with the wheel, keys and touch. */
+.playlists.no-bar { scrollbar-width: none; }
+.playlists.no-bar::-webkit-scrollbar { display: none; }
 .pl-cover {
   width: 38px; height: 38px; border-radius: var(--radius-sm); flex: none;
   object-fit: cover; background: var(--rim);
@@ -296,6 +309,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .look-row .slider { grid-column: 1 / -1; }
 .look-pop input[type="range"].slider::-webkit-slider-thumb { opacity: 1; }
 .look-pop input[type="range"].slider::-moz-range-thumb { opacity: 1; }
+.look-actions { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
 .look-reset { justify-self: center; padding: 4px 10px; border-radius: 999px; font-size: 12px; color: var(--muted); }
 .look-reset:hover { background: var(--hover); color: var(--fg); }
 .side-foot .who { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
@@ -827,7 +841,10 @@ input[type="range"].slider:disabled { cursor: default; }
           <input type="range" class="slider" id="look-colour" min="0" max="100" step="5" value="50"></label>
         <label class="look-row">Brightness<output id="look-bright-v" for="look-bright"></output>
           <input type="range" class="slider" id="look-bright" min="0" max="100" step="5" value="50"></label>
-        <button class="look-reset" id="look-reset" type="button">Reset</button>
+        <div class="look-actions">
+          <button class="look-reset" id="look-reset" type="button">Reset colours</button>
+          <button class="look-reset" id="layout-reset" type="button">Reset layout</button>
+        </div>
       </div>
       <button class="icon-btn" id="signout" type="button" title="Sign out" aria-label="Sign out"><svg class="i"><use href="#i-signout"/></svg></button>
     </div>
@@ -964,7 +981,7 @@ input[type="range"].slider:disabled { cursor: default; }
   <div class="resizer" id="resize-l" role="separator" aria-orientation="vertical" aria-label="Resize your library" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <div class="resizer" id="resize-r" role="separator" aria-orientation="vertical" aria-label="Resize the queue" tabindex="0" title="Drag to resize · double-click to reset"></div>
   <aside class="queue-panel glass" id="queue-panel" aria-labelledby="qp-title" hidden>
-    <button class="icon-btn panel-toggle" id="qp-close" type="button" aria-label="Close the queue" title="Close the queue"><svg class="i"><use href="#i-panel-r"/></svg></button>
+    <button class="icon-btn panel-toggle" id="qp-close" type="button" aria-expanded="true" aria-label="Collapse the queue" title="Collapse the queue"><svg class="i"><use href="#i-panel-r"/></svg></button>
     <div class="qp-head">
       <h2 class="brand" id="qp-title">Queue</h2>
       <span class="qp-sub" id="qp-sub"></span>
@@ -2090,6 +2107,7 @@ input[type="range"].slider:disabled { cursor: default; }
     ul.appendChild(frag);
     if (state.view) markNav();
     markPlayingContext(true);
+    fitBars();
   }
 
   // ---------- listening history (built from Spotify's recent plays) ----------
@@ -3196,6 +3214,7 @@ input[type="range"].slider:disabled { cursor: default; }
       const text = el('span', 'pl-text');
       text.append(el('span', 'pl-name', t.name), el('span', 'pl-owner', t.artists));
       b.appendChild(text);
+      b.title = t.artists ? `${t.name} · ${t.artists}` : t.name;
       li.appendChild(b);
       frag.appendChild(li);
       return { li, b };
@@ -3245,6 +3264,7 @@ input[type="range"].slider:disabled { cursor: default; }
       : p.spotify.length || p.handed ? 'Tap a song to skip to it. Right-click a song for more.'
         : 'Nothing queued after this. Add songs with the + button or by right-clicking any song.'));
     ul.replaceChildren(frag);
+    fitBars();
   }
   const asTrack = (t, added) => ({
     uri: t.uri, name: t.name || '', artists: t.artists || '', key: searchKey((t.name || '') + ' ' + (t.artists || '')),
@@ -4442,6 +4462,7 @@ input[type="range"].slider:disabled { cursor: default; }
     $('playlists').replaceChildren(frag);
     if (state.view) markNav();
     markPlayingContext(true);
+    fitBars();
   }
   function renderArtists() {
     if (state.libTab !== 'artists') return;
@@ -4458,6 +4479,7 @@ input[type="range"].slider:disabled { cursor: default; }
     }
     $('playlists').replaceChildren(frag);
     markPlayingContext(true);
+    fitBars();
   }
   async function loadAlbums(force) {
     if (state.albumsLoading || (!force && state.albumsAt && Date.now() - state.albumsAt < 30 * 60e3)) return;
@@ -4858,6 +4880,7 @@ input[type="range"].slider:disabled { cursor: default; }
     const other = side === 'l'
       ? ($('app').classList.contains('with-queue') && wideQueue.matches ? $('queue-panel').getBoundingClientRect().width + GAP : 0)
       : (lay.rail ? RAIL_W : $('app').querySelector('.sidebar').getBoundingClientRect().width) + GAP;
+    if (side === 'l' && lay.qrail && $('app').classList.contains('with-queue') && wideQueue.matches) return Math.max(LIMITS.l[0], Math.min(LIMITS.l[1], innerWidth - 4 * GAP - RAIL_W - MAIN_MIN));
     const room = innerWidth - 2 * GAP - GAP - other - MAIN_MIN;
     return Math.max(LIMITS[side][0], Math.min(LIMITS[side][1], room));
   }
@@ -4868,7 +4891,10 @@ input[type="range"].slider:disabled { cursor: default; }
     if (lay.rail) st.setProperty('--side-l', RAIL_W + 'px');
     else if (lay.l) st.setProperty('--side-l', Math.min(lay.l, sideMax('l', lay)) + 'px');
     else st.removeProperty('--side-l');
-    if (lay.r) st.setProperty('--side-r', Math.min(lay.r, sideMax('r', lay)) + 'px');
+    $('app').classList.toggle('qrail', !!lay.qrail);
+    markQueueToggle(!!lay.qrail);
+    if (lay.qrail) st.setProperty('--side-r', RAIL_W + 'px');
+    else if (lay.r) st.setProperty('--side-r', Math.min(lay.r, sideMax('r', lay)) + 'px');
     else st.removeProperty('--side-r');
     for (const side of ['l', 'r']) {
       const h = $('resize-' + side);
@@ -4878,9 +4904,36 @@ input[type="range"].slider:disabled { cursor: default; }
       const w = Math.round(panel.getBoundingClientRect().width);
       if (w) h.setAttribute('aria-valuenow', w);
     }
+    if (!$('app').classList.contains('resizing')) fitBars();
   }
-  function setRail(on) {
-    const next = Object.assign({}, getLayout(), { rail: on });
+  // Show a list's scrollbar only if no name in it is cut short with the bar there.
+  let fitFrame = 0;
+  function fitBars() {
+    cancelAnimationFrame(fitFrame);
+    fitFrame = requestAnimationFrame(() => {
+      for (const ul of [$('playlists'), $('qp-list')]) {
+        if (!ul.offsetParent) continue;
+        ul.classList.remove('no-bar');
+        if (ul.scrollHeight <= ul.clientHeight + 1) continue;   // nothing to scroll, so no bar anyway
+        let cut = false;
+        const names = ul.querySelectorAll('.pl-name, .pl-owner');
+        for (let i = 0; i < names.length && i < 120; i++) {
+          const n = names[i];
+          if (n.clientWidth > 2 && n.scrollWidth > n.clientWidth + 1) { cut = true; break; }
+        }
+        ul.classList.toggle('no-bar', cut);
+      }
+    });
+  }
+  function markQueueToggle(rail) {
+    const b = $('qp-close');
+    const label = rail ? 'Expand the queue' : 'Collapse the queue';
+    b.setAttribute('aria-expanded', rail ? 'false' : 'true');
+    b.setAttribute('aria-label', label);
+    b.title = label;
+  }
+  function setRail(on, key) {
+    const next = Object.assign({}, getLayout(), { [key || 'rail']: on });
     store.set('layout', next);
     const app = $('app');
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -4900,7 +4953,7 @@ input[type="range"].slider:disabled { cursor: default; }
   function wireResizers() {
     applyLayout(getLayout());
     $('lib-toggle').addEventListener('click', () => setRail(!getLayout().rail));
-    $('qp-close').addEventListener('click', () => { setQueuePanel(false); $('queue-btn').focus(); });
+    $('qp-close').addEventListener('click', () => setRail(!getLayout().qrail, 'qrail'));
     let fit = 0;
     window.addEventListener('resize', () => { cancelAnimationFrame(fit); fit = requestAnimationFrame(() => applyLayout(getLayout())); });
     for (const side of ['l', 'r']) {
@@ -4914,10 +4967,8 @@ input[type="range"].slider:disabled { cursor: default; }
         if (side === 'l') {
           if (w < 150) next.rail = true;
           else { next.rail = false; next.l = Math.round(Math.max(LIMITS.l[0], Math.min(w, sideMax('l', next)))); }
-        } else {
-          closing = w < 170;
-          next.r = Math.round(Math.max(LIMITS.r[0], Math.min(w, sideMax('r', next))));
-        }
+        } else if (w < 150) next.qrail = true;
+        else { next.qrail = false; next.r = Math.round(Math.max(LIMITS.r[0], Math.min(w, sideMax('r', next)))); }
         return next;
       };
       h.addEventListener('pointerdown', (e) => {
@@ -4953,7 +5004,6 @@ input[type="range"].slider:disabled { cursor: default; }
         panel.classList.remove('closing');
         if (Math.abs(lastX - startX) < 2) return;
         const next = sizeFor(startW + (side === 'l' ? lastX - startX : startX - lastX));
-        if (side === 'r' && closing) { applyLayout(lay); setQueuePanel(false); return; }
         store.set('layout', next);
         applyLayout(next);
       };
@@ -4961,7 +5011,7 @@ input[type="range"].slider:disabled { cursor: default; }
       h.addEventListener('pointercancel', end);
       h.addEventListener('dblclick', () => {
         const next = Object.assign({}, getLayout());
-        if (side === 'l') { delete next.l; delete next.rail; } else delete next.r;
+        if (side === 'l') { delete next.l; delete next.rail; } else { delete next.r; delete next.qrail; }
         store.set('layout', next);
         applyLayout(next);
       });
@@ -4971,11 +5021,13 @@ input[type="range"].slider:disabled { cursor: default; }
         let next = null;
         const grow = side === 'l' ? 'ArrowRight' : 'ArrowLeft', shrink = side === 'l' ? 'ArrowLeft' : 'ArrowRight';
         lay = cur;
-        if (e.key === grow) next = sizeFor(Math.max(w, side === 'l' && cur.rail ? LIMITS.l[0] - 20 : w) + 20);
-        else if (e.key === shrink) next = sizeFor(Math.max(side === 'l' ? 0 : LIMITS.r[0], w - 20));
-        else if (e.key === 'Home') next = side === 'l' ? Object.assign({}, cur, { rail: true }) : sizeFor(LIMITS.r[0]);
+        const folded = side === 'l' ? cur.rail : cur.qrail;
+        const key = side === 'l' ? 'rail' : 'qrail';
+        if (e.key === grow) next = sizeFor(Math.max(w, folded ? LIMITS[side][0] - 20 : w) + 20);
+        else if (e.key === shrink) next = sizeFor(Math.max(0, w - 20));
+        else if (e.key === 'Home') next = Object.assign({}, cur, { [key]: true });
         else if (e.key === 'End') next = sizeFor(LIMITS[side][1]);
-        else if (e.key === 'Enter' && side === 'l') next = Object.assign({}, cur, { rail: !cur.rail });
+        else if (e.key === 'Enter') next = Object.assign({}, cur, { [key]: !folded });
         if (!next) return;
         e.preventDefault();
         closing = false;
@@ -5199,6 +5251,18 @@ input[type="range"].slider:disabled { cursor: default; }
     $('look-colour').addEventListener('input', onLook);
     $('look-bright').addEventListener('input', onLook);
     $('look-reset').addEventListener('click', () => applyLook({ colour: 50, bright: 50 }, true));
+    // Panel widths and folding back to normal, with the queue showing again.
+    $('layout-reset').addEventListener('click', () => {
+      const app = $('app');
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        app.classList.add('animating');
+        setTimeout(() => app.classList.remove('animating'), 220);
+      }
+      store.del('layout');
+      if (!app.classList.contains('with-queue')) setQueuePanel(true);
+      applyLayout({});
+      toast('Layout reset');
+    });
 
     $('signout').addEventListener('click', () => {
       if (state.player) state.player.disconnect();
