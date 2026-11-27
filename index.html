@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>Pane</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f86b0'/%3E%3Cstop offset='1' stop-color='%236a5aa8'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.45'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.12'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='15' fill='url(%23b)'/%3E%3Crect x='7' y='7' width='50' height='50' rx='12' fill='url(%23g)' stroke='%23fff' stroke-opacity='.6' stroke-width='2.5'/%3E%3Cpath d='M24.5 19.5v25a2 2 0 0 0 3 1.7l20.5-12.5a2 2 0 0 0 0-3.4L27.5 17.8a2 2 0 0 0-3 1.7z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
 /* Layout: translucent glass sheets over a quiet backdrop that takes a soft, desaturated wash from the cover of what's playing. */
 :root {
@@ -232,6 +233,20 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 .queue-panel.closing { opacity: .45; }
 .panel-toggle { position: absolute; top: 12px; width: 32px; height: 32px; }
 .sidebar .panel-toggle { right: 10px; }
+.sidebar #lib-view { right: auto; left: 10px; }
+/* Library as a grid of covers: names on hover, play button in the middle. */
+#app:not(.rail) #playlists.grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; padding: 2px; }
+#app:not(.rail) #playlists.grid > li:not(.lib-item):not(:has(.pl-btn)) { grid-column: 1 / -1; }
+#app:not(.rail) #playlists.grid .pl-btn { display: block; padding: 0; aspect-ratio: 1; border-radius: 10px; background: none; }
+#app:not(.rail) #playlists.grid .pl-cover { width: 100%; height: 100%; border-radius: 10px; }
+#app:not(.rail) #playlists.grid .pl-cover svg.i { width: 30%; height: 30%; }
+#app:not(.rail) #playlists.grid .pl-cover.round { border-radius: 50%; }
+#app:not(.rail) #playlists.grid .pl-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#app:not(.rail) #playlists.grid .pl-play { left: auto; top: auto; right: 5px; bottom: 5px; transform: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+#app:not(.rail) #playlists.grid .pl-play svg.i { width: 13px; height: 13px; }
+#app:not(.rail) #playlists.grid .pl-btn:hover .pl-cover, #app:not(.rail) #playlists.grid .pl-btn:focus-visible .pl-cover { filter: brightness(.85); }
+#app:not(.rail) #playlists.grid .pl-btn[aria-current="page"] .pl-cover { box-shadow: 0 0 0 2px var(--fg); }
+#app:not(.rail) #playlists.grid .lib-item.ctx-on .pl-cover { box-shadow: 0 0 0 2px var(--accent); }
 .queue-panel .panel-toggle { left: 10px; }
 .panel-toggle svg.i { width: 19px; height: 19px; }
 /* Folding and unfolding with the button glides; dragging stays instant. */
@@ -241,6 +256,7 @@ body.lite .glass { background: var(--glass-solid); box-shadow: 0 1px 0 var(--rim
 @media (min-width: 761px) {
   #app.rail .sidebar { padding: 12px 8px 12px; }
   #app.rail .sidebar .panel-toggle { position: static; align-self: center; flex: none; }
+  #app.rail #lib-view { display: none; }
   #app.rail .sidebar .brand, #app.rail .lib-chips { display: none; }
   #app.rail .sidebar .nav-btn, #app.rail .sidebar .pl-btn { justify-content: center; padding: 8px 0; gap: 0; }
   #app.rail .sidebar .nav-text, #app.rail .sidebar .pl-text, #app.rail .side-foot .who {
@@ -767,6 +783,8 @@ input[type="range"].slider:disabled { cursor: default; }
   <symbol id="i-queue" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h12"/><path d="M4 12h12"/><path d="M4 18h7"/><path d="M18 15v6"/><path d="M15 18h6"/></g></symbol>
   <symbol id="i-panel-l" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15"/></g></symbol>
   <symbol id="i-panel-r" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M14.5 4.5v15"/></g></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></g></symbol>
+  <symbol id="i-rows" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" stroke-width="2.6"/></g></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="i-album" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/></g></symbol>
@@ -820,6 +838,7 @@ input[type="range"].slider:disabled { cursor: default; }
 <div id="app" hidden>
   <aside class="sidebar glass" aria-label="Library">
     <div class="brand">Pane</div>
+    <button class="icon-btn panel-toggle" id="lib-view" type="button" aria-pressed="false" aria-label="Show as a grid of covers" title="Show as a grid of covers"><svg class="i"><use href="#i-grid"/></svg></button>
     <button class="icon-btn panel-toggle" id="lib-toggle" type="button" aria-expanded="true" aria-label="Collapse your library" title="Collapse your library"><svg class="i"><use href="#i-panel-l"/></svg></button>
     <nav class="nav" aria-label="Views">
       <button class="nav-btn" type="button" data-view="home"><svg class="i"><use href="#i-home"/></svg><span class="nav-text">Home</span></button>
@@ -2045,7 +2064,7 @@ input[type="range"].slider:disabled { cursor: default; }
       id: p.id, uri: p.uri, name: p.name, snapshot_id: p.snapshot_id || null,
       owner: { id: p.owner && p.owner.id || '', display_name: p.owner && p.owner.display_name || '' },
       collaborative: !!p.collaborative,
-      images: p.images && p.images.length ? [{ url: pickImg(p.images, 64), width: 64, height: 64 }] : [],
+      images: p.images && p.images.length ? [{ url: pickImg(p.images, 64), width: 64, height: 64 }, { url: pickImg(p.images, 300), width: 300, height: 300 }] : [],
       items: { total: (p.items || p.tracks || {}).total }
     };
   }
@@ -2059,6 +2078,7 @@ input[type="range"].slider:disabled { cursor: default; }
       owner: p.owner && p.owner.display_name || '',
       total: meta && typeof meta.total === 'number' ? meta.total : null,
       image: pickImg(p.images, 64),
+      big: pickImg(p.images, 300),
       snapshot: p.snapshot_id || null
     };
   }
@@ -2083,8 +2103,8 @@ input[type="range"].slider:disabled { cursor: default; }
   function renderPlaylists() {
     if (state.libTab && state.libTab !== 'playlists') return;
     const ul = $('playlists');
-    ul.replaceChildren(newPlaylistRow());
-    if (!state.playlists.length) return;
+    ul.replaceChildren();
+    ul.classList.toggle('grid', libGrid());
     const frag = document.createDocumentFragment();
     for (const p of state.playlists) {
       const v = playlistView(p);
@@ -2092,7 +2112,8 @@ input[type="range"].slider:disabled { cursor: default; }
       const b = el('button', 'pl-btn');
       b.type = 'button';
       b.dataset.id = v.id;
-      if (v.image) b.appendChild(imgEl(v.image, 'pl-cover'));
+      const pic = libGrid() ? v.big || v.image : v.image;
+      if (pic) b.appendChild(imgEl(pic, 'pl-cover'));
       else { const cover = el('span', 'pl-cover'); cover.appendChild(icon('i-note')); b.appendChild(cover); }
       const text = el('span', 'pl-text');
       text.append(el('span', 'pl-name', v.name), el('span', 'pl-owner', v.owner));
@@ -2104,6 +2125,7 @@ input[type="range"].slider:disabled { cursor: default; }
       addPlayButton(li, v.uri, v.name, false);
       frag.appendChild(li);
     }
+    frag.appendChild(newPlaylistRow());
     ul.appendChild(frag);
     if (state.view) markNav();
     markPlayingContext(true);
@@ -4397,7 +4419,8 @@ input[type="range"].slider:disabled { cursor: default; }
     b.dataset.kind = kind;
     b.title = item.name;
     const round = kind === 'artist' ? ' round' : '';
-    if (item.image) b.appendChild(imgEl(item.image, 'pl-cover' + round));
+    const pic = libGrid() ? item.big || item.image : item.image;
+    if (pic) b.appendChild(imgEl(pic, 'pl-cover' + round));
     else { const c = el('span', 'pl-cover' + round); c.appendChild(icon(kind === 'artist' ? 'i-user' : 'i-album')); b.appendChild(c); }
     const text = el('span', 'pl-text');
     text.append(el('span', 'pl-name', item.name), el('span', 'pl-owner', sub));
@@ -4448,6 +4471,20 @@ input[type="range"].slider:disabled { cursor: default; }
     $('playlists').replaceChildren(li);
   }
   const albumView = (a) => ({ type: 'album', id: a.id, uri: a.uri, name: a.name, owner: a.artists || '', total: a.total != null ? a.total : null, image: a.image || '', art: a.image || '' });
+  const libGrid = () => store.get('libView') === 'grid';
+  function setLibView(grid) {
+    store.set('libView', grid ? 'grid' : 'list');
+    const b = $('lib-view');
+    const label = grid ? 'Show as a list' : 'Show as a grid of covers';
+    b.setAttribute('aria-pressed', grid ? 'true' : 'false');
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    const use = b.querySelector('use');
+    if (use) use.setAttribute('href', grid ? '#i-rows' : '#i-grid');
+    $('playlists').classList.toggle('grid', grid);
+    const tab = state.libTab || 'playlists';
+    if (tab === 'playlists') renderPlaylists(); else if (tab === 'albums') renderAlbums(); else renderArtists();
+  }
   function renderAlbums() {
     if (state.libTab !== 'albums') return;
     const list = state.albums || store.get('albums');
@@ -4492,7 +4529,7 @@ input[type="range"].slider:disabled { cursor: default; }
         for (const it of (d && d.items) || []) {
           const a = it && it.album;
           if (!a || !a.id) continue;
-          all.push({ id: a.id, uri: a.uri, name: a.name || 'Untitled album', artists: (a.artists || []).map((x) => x.name).join(', '), image: pickImg(a.images, 64), total: (a.tracks && a.tracks.total) != null ? a.tracks.total : (a.total_tracks != null ? a.total_tracks : null) });
+          all.push({ id: a.id, uri: a.uri, name: a.name || 'Untitled album', artists: (a.artists || []).map((x) => x.name).join(', '), image: pickImg(a.images, 64), big: pickImg(a.images, 300), total: (a.tracks && a.tracks.total) != null ? a.tracks.total : (a.total_tracks != null ? a.total_tracks : null) });
         }
         next = d && d.next;
       }
@@ -4516,7 +4553,7 @@ input[type="range"].slider:disabled { cursor: default; }
       for (let page = 0; next && page < 20; page++) {
         const d = typeof next === 'string' ? await api(next) : await api(next[0], { query: next[1] });
         const box = (d && d.artists) || {};
-        for (const a of box.items || []) if (a && a.id) all.push({ id: a.id, uri: a.uri, name: a.name || 'Artist', image: pickImg(a.images, 64) });
+        for (const a of box.items || []) if (a && a.id) all.push({ id: a.id, uri: a.uri, name: a.name || 'Artist', image: pickImg(a.images, 64), big: pickImg(a.images, 300) });
         next = box.next || null;
       }
       all.sort((x, y) => collator.compare(x.name, y.name));
@@ -4534,6 +4571,8 @@ input[type="range"].slider:disabled { cursor: default; }
     }
   }
   function wireLibrary() {
+    $('lib-view').addEventListener('click', () => setLibView(!libGrid()));
+    if (libGrid()) { const b = $('lib-view'); b.setAttribute('aria-pressed', 'true'); b.setAttribute('aria-label', 'Show as a list'); b.title = 'Show as a list'; b.querySelector('use').setAttribute('href', '#i-rows'); $('playlists').classList.add('grid'); }
     $('playlists').addEventListener('click', (e) => {
       const b = e.target.closest('.pl-play');
       if (b) { e.stopPropagation(); playFromLibrary(b.dataset.ctx); }
